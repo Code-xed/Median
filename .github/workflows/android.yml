@@ -1,46 +1,46 @@
 name: Android Build
 
 on:
-push:
-branches: ['**']
-pull_request:
+  push:
+    branches: ['**']
+  pull_request:
 
 permissions:
-contents: read
+  contents: read
 
 jobs:
-build:
-runs-on: ubuntu-latest
-timeout-minutes: 30
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-steps:
-  - name: Checkout
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  - name: Setup Java
-    uses: actions/setup-java@v4
-    with:
-      distribution: temurin
-      java-version: '17'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-  - name: Setup Gradle
-    uses: gradle/actions/setup-gradle@v4
-    with:
-      gradle-version: '8.13'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
 
-  - name: Build Debug APK
-    run: ./gradlew --no-daemon clean assembleDebug
+      - name: Build Debug APK
+        run: ./gradlew --no-daemon clean assembleDebug
 
-  - name: Generate checksum
-    run: |
-      sha256sum app/build/outputs/apk/debug/app-debug.apk > SHA256SUMS.txt
+      - name: Generate checksum
+        run: |
+          sha256sum app/build/outputs/apk/debug/app-debug.apk > SHA256SUMS.txt
 
-  - name: Upload APK
-    uses: actions/upload-artifact@v4
-    with:
-      name: Median-Debug-${{ github.sha }}
-      path: |
-        app/build/outputs/apk/debug/app-debug.apk
-        SHA256SUMS.txt
-      if-no-files-found: error
-      retention-days: 14
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Median-Debug-${{ github.sha }}
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
