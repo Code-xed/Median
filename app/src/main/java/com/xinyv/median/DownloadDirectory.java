@@ -38,8 +38,8 @@ final class DownloadDirectory {
 
     static String label(Context context) {
         if (selectedTree(context) == null)
-            return Build.VERSION.SDK_INT >= 29 ? "Download/Median（默认）" : "应用下载目录（默认）";
-        return prefs(context).getString(NAME, "自定义下载文件夹");
+            return Build.VERSION.SDK_INT >= 29 ? "Download/Median (Default)" : "App Downloads folder (Default)";
+        return prefs(context).getString(NAME, "Custom downloads folder");
     }
 
     static Intent picker(Context context) {
@@ -52,23 +52,23 @@ final class DownloadDirectory {
     }
 
     static void showPickerDialog(final Activity activity, final int requestCode, final Runnable returnAction) {
-        new AlertDialog.Builder(activity).setTitle("下载文件夹")
-                .setMessage("当前：" + label(activity) + "\n\n下载完成时保存到所选目录，已有文件不会移动。外部下载器使用其自身的目录设置。")
-                .setPositiveButton("选择文件夹", new DialogInterface.OnClickListener() {
+        new AlertDialog.Builder(activity).setTitle("Downloads Folder")
+                .setMessage("Current: " + label(activity) + "\n\nCompleted downloads are saved to the selected folder. Existing files will not be moved. External downloaders use their own folder settings.")
+                .setPositiveButton("Choose Folder", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         try { activity.startActivityForResult(picker(activity), requestCode); }
                         catch (ActivityNotFoundException error) {
-                            Toast.makeText(activity, "系统文件夹选择器不可用", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "System folder picker is unavailable", Toast.LENGTH_SHORT).show();
                             returnTo(activity, returnAction);
                         }
                     }
-                }).setNeutralButton("恢复默认", new DialogInterface.OnClickListener() {
+                }).setNeutralButton("Reset to Default", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         reset(activity);
-                        Toast.makeText(activity, "已恢复默认下载文件夹", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "Restored default downloads folder", Toast.LENGTH_SHORT).show();
                         returnTo(activity, returnAction);
                     }
-                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) { returnTo(activity, returnAction); }
                 }).setOnCancelListener(new DialogInterface.OnCancelListener() {
                     @Override public void onCancel(DialogInterface dialog) { returnTo(activity, returnAction); }
@@ -86,8 +86,8 @@ final class DownloadDirectory {
                 String message;
                 try {
                     save(context, data.getData(), data.getFlags());
-                    message = "下载文件夹已改为：" + label(context);
-                } catch (Exception error) { message = "未修改下载文件夹：" + ErrorText.message(error, 120); }
+                    message = "Downloads folder changed to: " + label(context);
+                } catch (Exception error) { message = "Downloads folder unchanged: " + ErrorText.message(error, 120); }
                 final String result = message;
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                     @Override public void run() {
@@ -106,16 +106,16 @@ final class DownloadDirectory {
 
     static void save(Context context, Uri tree, int resultFlags) throws Exception {
         if (tree == null || !"content".equals(tree.getScheme()) || !DocumentsContract.isTreeUri(tree))
-            throw new IllegalArgumentException("请选择有效的文件夹");
+            throw new IllegalArgumentException("Please select a valid folder");
         int flags = resultFlags & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         if ((flags & Intent.FLAG_GRANT_WRITE_URI_PERMISSION) == 0)
-            throw new IllegalArgumentException("所选文件夹未授予写入权限");
+            throw new IllegalArgumentException("Write permission was not granted for the selected folder");
         boolean alreadyGranted = hasWriteGrant(context, tree);
         context.getContentResolver().takePersistableUriPermission(tree, flags);
         try {
             String name = requireWritable(context, tree);
             if (!prefs(context).edit().putString(TREE, tree.toString()).putString(NAME, name).commit())
-                throw new IllegalStateException("无法保存下载文件夹设置");
+                throw new IllegalStateException("Unable to save downloads folder setting");
         } catch (Exception error) {
             if (!alreadyGranted) try { context.getContentResolver().releasePersistableUriPermission(tree, flags); }
             catch (RuntimeException ignored) {}
@@ -137,7 +137,7 @@ final class DownloadDirectory {
 
     static String requireWritable(Context context, Uri tree) throws Exception {
         if (!hasWriteGrant(context, tree))
-            throw new IllegalStateException("下载文件夹授权已失效，请在下载设置中重新选择文件夹");
+            throw new IllegalStateException("Downloads folder permission expired; please reselect it in Download Settings");
         Uri document = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree));
         try (Cursor cursor = context.getContentResolver().query(document, new String[] {
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE,
@@ -145,14 +145,14 @@ final class DownloadDirectory {
             if (cursor == null || !cursor.moveToFirst() ||
                     !DocumentsContract.Document.MIME_TYPE_DIR.equals(cursor.getString(1)) ||
                     (cursor.getLong(2) & DocumentsContract.Document.FLAG_DIR_SUPPORTS_CREATE) == 0)
-                throw new IllegalStateException("所选下载文件夹不可写，请重新选择文件夹");
+                throw new IllegalStateException("Selected downloads folder is not writable; please choose another folder");
             String name = cursor.getString(0);
-            return name == null || name.length() == 0 ? "自定义下载文件夹" : name;
+            return name == null || name.length() == 0 ? "Custom downloads folder" : name;
         } catch (SecurityException error) {
-            throw new IllegalStateException("下载文件夹授权已失效，请在下载设置中重新选择文件夹", error);
+            throw new IllegalStateException("Downloads folder permission expired; please reselect it in Download Settings", error);
         } catch (IllegalStateException error) { throw error;
         } catch (Exception error) {
-            throw new IllegalStateException("下载文件夹不可用，请在下载设置中重新选择文件夹", error);
+            throw new IllegalStateException("Downloads folder is unavailable; please reselect it in Download Settings", error);
         }
     }
 

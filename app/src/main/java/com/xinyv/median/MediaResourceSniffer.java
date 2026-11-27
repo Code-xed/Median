@@ -12,6 +12,15 @@ import java.util.Locale;
 
 /** Bounded, metadata-only media URL index populated from requests and DOM media elements. */
 final class MediaResourceSniffer {
+    static final String KIND_HLS = "hls";
+    static final String KIND_DASH = "dash";
+    static final String KIND_SMOOTH = "smooth";
+    static final String KIND_VIDEO = "video";
+    static final String KIND_AUDIO = "audio";
+    static final String KIND_RANGE = "range";
+    static final String KIND_SEGMENT = "segment";
+    static final String KIND_MANIFEST = "manifest";
+
     static final class Resource implements Cloneable {
         String url;
         String mime;
@@ -23,6 +32,10 @@ final class MediaResourceSniffer {
         int width;
         int height;
         double duration;
+
+        String displayKind() {
+            return displayLabel(kind);
+        }
 
         Resource copy() {
             try { return (Resource) super.clone(); }
@@ -268,35 +281,47 @@ final class MediaResourceSniffer {
         if (victim != null) items.remove(victim);
     }
 
+    static String displayLabel(String kind) {
+        if (KIND_HLS.equals(kind)) return "HLS Stream";
+        if (KIND_DASH.equals(kind)) return "DASH Stream";
+        if (KIND_SMOOTH.equals(kind)) return "Smooth Stream";
+        if (KIND_VIDEO.equals(kind)) return "Video";
+        if (KIND_AUDIO.equals(kind)) return "Audio";
+        if (KIND_RANGE.equals(kind)) return "Range Media Candidate";
+        if (KIND_SEGMENT.equals(kind)) return "Media Segment";
+        if (KIND_MANIFEST.equals(kind)) return "Media Manifest";
+        return value(kind);
+    }
+
     private static String kindOf(String url, String mime) {
-        if (mime.contains("mpegurl") || hasAny(url, HLS_HINTS) || containsAny(url, HLS_PATHS)) return "HLS 流";
-        if (mime.contains("dash+xml") || hasAny(url, DASH_HINTS) || containsAny(url, DASH_PATHS)) return "DASH 流";
-        if (mime.contains("vnd.ms-sstr") || hasAny(url, SMOOTH_HINTS) || containsAny(url, SMOOTH_PATHS)) return "Smooth 流";
-        if (mime.startsWith("video/") || hasAny(url, VIDEO_HINTS) || containsAny(url, VIDEO_PATHS)) return "视频";
-        if (mime.startsWith("audio/") || hasAny(url, AUDIO_HINTS) || containsAny(url, AUDIO_PATHS)) return "音频";
-        if (mime.contains("x-median-range")) return "范围媒体候选";
-        if (hasAny(url, SEGMENT_HINTS) || containsAny(url, SEGMENT_PATHS)) return "媒体分片";
-        if (hasPathMarker(url, "manifest") || hasPathMarker(url, "playlist")) return "媒体清单";
+        if (mime.contains("mpegurl") || hasAny(url, HLS_HINTS) || containsAny(url, HLS_PATHS)) return KIND_HLS;
+        if (mime.contains("dash+xml") || hasAny(url, DASH_HINTS) || containsAny(url, DASH_PATHS)) return KIND_DASH;
+        if (mime.contains("vnd.ms-sstr") || hasAny(url, SMOOTH_HINTS) || containsAny(url, SMOOTH_PATHS)) return KIND_SMOOTH;
+        if (mime.startsWith("video/") || hasAny(url, VIDEO_HINTS) || containsAny(url, VIDEO_PATHS)) return KIND_VIDEO;
+        if (mime.startsWith("audio/") || hasAny(url, AUDIO_HINTS) || containsAny(url, AUDIO_PATHS)) return KIND_AUDIO;
+        if (mime.contains("x-median-range")) return KIND_RANGE;
+        if (hasAny(url, SEGMENT_HINTS) || containsAny(url, SEGMENT_PATHS)) return KIND_SEGMENT;
+        if (hasPathMarker(url, "manifest") || hasPathMarker(url, "playlist")) return KIND_MANIFEST;
         return "";
     }
 
     private static String normalizedMime(String url, String mime, String kind) {
         if (mime.startsWith("video/") || mime.startsWith("audio/") || mime.startsWith("application/")) return mime;
-        if ("HLS 流".equals(kind)) return "application/vnd.apple.mpegurl";
-        if ("DASH 流".equals(kind)) return "application/dash+xml";
-        if ("Smooth 流".equals(kind)) return "application/vnd.ms-sstr+xml";
-        if ("媒体清单".equals(kind)) return "application/octet-stream";
-        if ("范围媒体候选".equals(kind)) return "application/octet-stream";
-        if ("媒体分片".equals(kind)) return hasAny(url, ISO_SEGMENT_HINTS) ? "video/iso.segment" : "video/mp2t";
+        if (KIND_HLS.equals(kind)) return "application/vnd.apple.mpegurl";
+        if (KIND_DASH.equals(kind)) return "application/dash+xml";
+        if (KIND_SMOOTH.equals(kind)) return "application/vnd.ms-sstr+xml";
+        if (KIND_MANIFEST.equals(kind)) return "application/octet-stream";
+        if (KIND_RANGE.equals(kind)) return "application/octet-stream";
+        if (KIND_SEGMENT.equals(kind)) return hasAny(url, ISO_SEGMENT_HINTS) ? "video/iso.segment" : "video/mp2t";
         if (hasToken(url, ".mp3")) return "audio/mpeg";
         if (hasToken(url, ".m4a") || hasToken(url, ".aac")) return "audio/mp4";
         if (hasToken(url, ".webm") || hasToken(url, ".weba")) return "video/webm";
-        return "视频".equals(kind) ? "video/*" : "audio/*";
+        return KIND_VIDEO.equals(kind) ? "video/*" : "audio/*";
     }
 
     private static int priorityOf(String kind) {
-        if ("HLS 流".equals(kind) || "DASH 流".equals(kind) || "Smooth 流".equals(kind) || "媒体清单".equals(kind)) return 3;
-        if ("媒体分片".equals(kind) || "范围媒体候选".equals(kind)) return 1;
+        if (KIND_HLS.equals(kind) || KIND_DASH.equals(kind) || KIND_SMOOTH.equals(kind) || KIND_MANIFEST.equals(kind)) return 3;
+        if (KIND_SEGMENT.equals(kind) || KIND_RANGE.equals(kind)) return 1;
         return 2;
     }
 

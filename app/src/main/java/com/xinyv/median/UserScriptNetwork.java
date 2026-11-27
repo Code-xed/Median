@@ -127,7 +127,7 @@ final class UserScriptNetwork {
     }
 
     private void requireActive(Request request) throws IOException {
-        if (closed || request.cancelled) throw new IOException("脚本读取已取消");
+        if (closed || request.cancelled) throw new IOException("Script fetch cancelled");
     }
 
     private void registerConnection(Request request, String key, HttpURLConnection connection) throws IOException {
@@ -397,7 +397,7 @@ final class UserScriptNetwork {
             // when the bounded executor is saturated, otherwise GM_xmlhttpRequest remains
             // pending forever with no onerror/onloadend notification.
             dispatchScriptEvent(source, token, scriptId, callbackId, requestDocumentGeneration, "error",
-                    errorPayload(new RejectedExecutionException("脚本网络服务繁忙")));
+                    errorPayload(new RejectedExecutionException("Script network service is busy")));
         }
     }
 

@@ -140,7 +140,7 @@ public final class DownloadCenterActivity extends Activity {
         list.setAdapter(adapter);
         body.addView(list, new FrameLayout.LayoutParams(-1, -1));
 
-        TextView empty = text("这里还没有下载记录", 15, MUTED, Gravity.CENTER);
+        TextView empty = text("No downloads yet", 15, MUTED, Gravity.CENTER);
         empty.setId(android.R.id.empty);
         empty.setPadding(dp(24), dp(40), dp(24), dp(40));
         FrameLayout.LayoutParams emptyParams = new FrameLayout.LayoutParams(-1, -2, Gravity.CENTER);
@@ -159,18 +159,18 @@ public final class DownloadCenterActivity extends Activity {
 
         Button back = button("‹", false, false);
         back.setTextSize(TypedValue.COMPLEX_UNIT_SP, 32);
-        back.setContentDescription("返回");
+        back.setContentDescription("Back");
         back.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { finish(); }
         });
         bar.addView(back, new LinearLayout.LayoutParams(dp(48), dp(48)));
 
-        TextView title = text("下载", 21, TEXT, Gravity.CENTER_VERTICAL);
+        TextView title = text("Downloads", 21, TEXT, Gravity.CENTER_VERTICAL);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         bar.addView(title, new LinearLayout.LayoutParams(0, -1, 1f));
 
-        Button directory = button("目录", false, false);
-        directory.setContentDescription("修改下载文件夹");
+        Button directory = button("Folder", false, false);
+        directory.setContentDescription("Change downloads folder");
         directory.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 DownloadDirectory.showPickerDialog(DownloadCenterActivity.this, DOWNLOAD_DIRECTORY_REQUEST, null);
@@ -178,8 +178,8 @@ public final class DownloadCenterActivity extends Activity {
         });
         bar.addView(directory, new LinearLayout.LayoutParams(dp(64), dp(38)));
 
-        Button clean = button("清理", false, false);
-        clean.setContentDescription("清理下载记录");
+        Button clean = button("Clean", false, false);
+        clean.setContentDescription("Clean up download history");
         clean.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showCleanupMenu(); }
         });
@@ -201,9 +201,9 @@ public final class DownloadCenterActivity extends Activity {
         summary.setGravity(Gravity.CENTER_VERTICAL);
         summary.setPadding(dp(16), dp(5), dp(16), dp(5));
         summary.setBackgroundColor(Color.WHITE);
-        summaryTitle = text("进行中 0 · 已完成 0 · 异常 0", 14, TEXT, Gravity.LEFT);
+        summaryTitle = text("Active 0 · Completed 0 · Issues 0", 14, TEXT, Gravity.LEFT);
         summaryTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        summaryDetail = text("可用空间计算中", 12, MUTED, Gravity.LEFT);
+        summaryDetail = text("Calculating available space", 12, MUTED, Gravity.LEFT);
         summaryDetail.setPadding(0, dp(3), 0, 0);
         summary.addView(summaryTitle);
         summary.addView(summaryDetail);
@@ -262,12 +262,12 @@ public final class DownloadCenterActivity extends Activity {
             if (matchesFilter(status)) visible.add(item);
         }
 
-        summaryTitle.setText("进行中 " + active + (paused > 0 ? " · 暂停 " + paused : "") +
-                " · 已完成 " + completed + " · 异常 " + problems);
-        String detail = "可用 " + availableStorage();
+        summaryTitle.setText("Active " + active + (paused > 0 ? " · Paused " + paused : "") +
+                " · Completed " + completed + " · Issues " + problems);
+        String detail = "Available " + availableStorage();
         if (speed > 0L) {
-            detail = "总速度 " + humanSpeed(speed) + " · " + detail;
-            if (remaining > 0L) detail += " · 约 " + humanDuration(remaining / speed);
+            detail = "Total speed " + humanSpeed(speed) + " · " + detail;
+            if (remaining > 0L) detail += " · ~" + humanDuration(remaining / speed);
         }
         summaryDetail.setText(detail);
         int[] counts = new int[] { all.size(), active + paused, completed, problems };
@@ -286,7 +286,7 @@ public final class DownloadCenterActivity extends Activity {
                     AdaptiveDownloadService.isTaskScheduled(item.id) ||
                     item.updatedAt <= 0L || now - item.updatedAt < 5000L) continue;
             item.status = DownloadStore.STATUS_PAUSED;
-            item.reason = "下载进程曾被系统中断，点击继续即可恢复";
+            item.reason = "Download was interrupted by the system; tap Resume to continue";
             item.updatedAt = now;
             store.updateAdaptiveTelemetry(item.id, item.status, item.reason,
                     item.downloadedBytes, item.totalBytes, 0L, null, item.etaSeconds, item.retryCount);
@@ -430,7 +430,7 @@ public final class DownloadCenterActivity extends Activity {
         void bind(final DownloadStore.Item item) {
             String status = effectiveStatus(item);
             int color = statusColor(status);
-            title.setText(item.filename.length() == 0 ? "未命名下载" : item.filename);
+            title.setText(item.filename.length() == 0 ? "Unnamed download" : item.filename);
             badge.setText(statusLabel(status));
             badge.setTextColor(color);
             badge.setBackground(rounded(withAlpha(color, 20), dp(13), withAlpha(color, 52), 1));
@@ -446,8 +446,8 @@ public final class DownloadCenterActivity extends Activity {
             progress.setProgress(progressValue);
             progress.setProgressTintList(ColorStateList.valueOf(color));
             progress.setIndeterminateTintList(ColorStateList.valueOf(color));
-            progress.setContentDescription(total > 0L ? "下载进度 " + progressText(progressValue) :
-                    (active ? "正在下载，总大小未知" : "下载进度未知"));
+            progress.setContentDescription(total > 0L ? "Download progress " + progressText(progressValue) :
+                    (active ? "Downloading, total size unknown" : "Download progress unknown"));
             telemetry.setText(taskTelemetry(item, status, current, total));
 
             String why = taskReason(item);
@@ -458,7 +458,7 @@ public final class DownloadCenterActivity extends Activity {
             root.setOnClickListener(new View.OnClickListener() {
                 @Override public void onClick(View view) { showDetails(item); }
             });
-            root.setContentDescription((item.filename.length() == 0 ? "未命名下载" : item.filename) + "，" + statusLabel(status));
+            root.setContentDescription((item.filename.length() == 0 ? "Unnamed download" : item.filename) + ", " + statusLabel(status));
         }
     }
 
@@ -469,42 +469,42 @@ public final class DownloadCenterActivity extends Activity {
         }
         int slot = 0;
         if (DownloadStore.STATUS_COMPLETED.equals(status)) {
-            showAction(row, slot++, "打开", true, new View.OnClickListener() {
+            showAction(row, slot++, "Open", true, new View.OnClickListener() {
                 @Override public void onClick(View view) { openFile(item, false); }
             });
-            showAction(row, slot++, "分享", false, new View.OnClickListener() {
+            showAction(row, slot++, "Share", false, new View.OnClickListener() {
                 @Override public void onClick(View view) { openFile(item, true); }
             });
-            showAction(row, slot, "移除", false, new View.OnClickListener() {
+            showAction(row, slot, "Remove", false, new View.OnClickListener() {
                 @Override public void onClick(View view) { removeRecord(item); }
             });
             return;
         }
         if (isActiveStatus(status)) {
-            if (item.isAdaptive()) showAction(row, slot++, "暂停", false, new View.OnClickListener() {
+            if (item.isAdaptive()) showAction(row, slot++, "Pause", false, new View.OnClickListener() {
                 @Override public void onClick(View view) { sendService(item.id, AdaptiveDownloadService.ACTION_PAUSE, false); }
             });
-            else showAction(row, slot++, "转入内部下载", true, new View.OnClickListener() {
+            else showAction(row, slot++, "Move to Built-in", true, new View.OnClickListener() {
                 @Override public void onClick(View view) { startMedianDownload(item); }
             });
-            showAction(row, slot, "取消", false, new View.OnClickListener() {
+            showAction(row, slot, "Cancel", false, new View.OnClickListener() {
                 @Override public void onClick(View view) { confirmCancel(item); }
             });
             return;
         }
         if (DownloadCenterPolicy.canResume(status)) {
-            showAction(row, slot++, DownloadStore.STATUS_PAUSED.equals(status) ? "继续" : "重试", true,
+            showAction(row, slot++, DownloadStore.STATUS_PAUSED.equals(status) ? "Resume" : "Retry", true,
                     new View.OnClickListener() {
                 @Override public void onClick(View view) { resume(item); }
             });
             if (DownloadStore.STATUS_PAUSED.equals(status)) {
-                showAction(row, slot, "取消", false, new View.OnClickListener() {
+                showAction(row, slot, "Cancel", false, new View.OnClickListener() {
                     @Override public void onClick(View view) { confirmCancel(item); }
                 });
                 return;
             }
         }
-        showAction(row, slot, "删除", false, new View.OnClickListener() {
+        showAction(row, slot, "Delete", false, new View.OnClickListener() {
             @Override public void onClick(View view) { removeRecord(item); }
         });
     }
@@ -521,7 +521,7 @@ public final class DownloadCenterActivity extends Activity {
     private void resume(DownloadStore.Item item) {
         if (!item.isAdaptive()) { startMedianDownload(item); return; }
         sendService(item.id, AdaptiveDownloadService.ACTION_RESUME, true);
-        toast("正在恢复下载");
+        toast("Resuming download");
     }
 
     private boolean startMedianDownload(DownloadStore.Item item) {
@@ -548,20 +548,20 @@ public final class DownloadCenterActivity extends Activity {
             DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
             if (manager != null) manager.remove(item.id);
             store.remove(item.id);
-            toast("已转入 Median 内部下载");
+            toast("Moved to Median built-in downloader");
             refreshSoon();
             return true;
         } catch (Exception error) {
             store.remove(newId);
-            toast("启动失败：" + ErrorText.message(error, 80));
+            toast("Failed to start: " + ErrorText.message(error, 80));
             return false;
         }
     }
 
     private void confirmCancel(final DownloadStore.Item item) {
-        new AlertDialog.Builder(this).setTitle("取消下载？")
-                .setMessage("已下载的临时数据会被删除。")
-                .setPositiveButton("取消任务", new DialogInterface.OnClickListener() {
+        new AlertDialog.Builder(this).setTitle("Cancel download?")
+                .setMessage("Temporary downloaded data will be deleted.")
+                .setPositiveButton("Cancel task", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         if (item.isAdaptive()) sendService(item.id, AdaptiveDownloadService.ACTION_CANCEL, false);
                         else {
@@ -571,7 +571,7 @@ public final class DownloadCenterActivity extends Activity {
                         }
                         refreshSoon();
                     }
-                }).setNegativeButton("返回", null).show();
+                }).setNegativeButton("Back", null).show();
     }
 
     private void removeRecord(final DownloadStore.Item item) {
@@ -589,7 +589,7 @@ public final class DownloadCenterActivity extends Activity {
         if (AdaptiveDownloadService.ACTION_RESUME.equals(action)) {
             previous = store.get(id);
             if (previous != null) store.updateAdaptiveTelemetry(id, DownloadStore.STATUS_PENDING,
-                    "正在恢复", previous.downloadedBytes, previous.totalBytes, 0L, null, 0L,
+                    "Resuming", previous.downloadedBytes, previous.totalBytes, 0L, null, 0L,
                     previous.retryCount);
         }
         try {
@@ -600,7 +600,7 @@ public final class DownloadCenterActivity extends Activity {
             if (previous != null) store.updateAdaptiveTelemetry(id, previous.status, previous.reason,
                     previous.downloadedBytes, previous.totalBytes, previous.bytesPerSecond,
                     previous.localUri, previous.etaSeconds, previous.retryCount);
-            toast("操作失败：" + ErrorText.message(error, 80));
+            toast("Action failed: " + ErrorText.message(error, 80));
         }
     }
 
@@ -617,24 +617,24 @@ public final class DownloadCenterActivity extends Activity {
     }
 
     private void showCleanupMenu() {
-        new AlertDialog.Builder(this).setTitle("清理下载记录")
+        new AlertDialog.Builder(this).setTitle("Clean up download history")
                 .setItems(new String[] {
-                        "清理失败和已取消任务",
-                        "清理已完成记录（保留文件）",
-                        "清理全部非活动记录"
+                        "Clear failed and cancelled tasks",
+                        "Clear completed records (keep files)",
+                        "Clear all inactive records"
                 }, new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) { confirmCleanup(which); }
-                }).setNegativeButton("关闭", null).show();
+                }).setNegativeButton("Close", null).show();
     }
 
     private void confirmCleanup(final int mode) {
         final ArrayList<DownloadStore.Item> candidates = cleanupCandidates(mode);
-        if (candidates.isEmpty()) { toast("没有可清理的记录"); return; }
-        String message = "将移除 " + candidates.size() + " 条记录";
-        if (mode == CLEAN_PROBLEMS || mode == CLEAN_TERMINAL) message += "，并删除未完成的临时数据";
-        else message += "，不会删除已经下载的文件";
-        new AlertDialog.Builder(this).setTitle("确认清理？").setMessage(message)
-                .setPositiveButton("清理", new DialogInterface.OnClickListener() {
+        if (candidates.isEmpty()) { toast("No records to clear"); return; }
+        String message = "This will remove " + candidates.size() + " record(s)";
+        if (mode == CLEAN_PROBLEMS || mode == CLEAN_TERMINAL) message += ", and delete incomplete temporary data";
+        else message += ", without deleting downloaded files";
+        new AlertDialog.Builder(this).setTitle("Confirm cleanup?").setMessage(message)
+                .setPositiveButton("Clean", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         ArrayList<Long> ids = new ArrayList<Long>();
                         for (DownloadStore.Item item : candidates) {
@@ -643,10 +643,10 @@ public final class DownloadCenterActivity extends Activity {
                             if (item.isAdaptive() && !DownloadStore.STATUS_COMPLETED.equals(status)) cancelSilently(item.id);
                         }
                         int removed = store.removeAll(ids);
-                        toast("已清理 " + removed + " 条记录");
+                        toast("Cleared " + removed + " record(s)");
                         refreshData();
                     }
-                }).setNegativeButton("返回", null).show();
+                }).setNegativeButton("Back", null).show();
     }
 
     private ArrayList<DownloadStore.Item> cleanupCandidates(int mode) {
@@ -668,27 +668,27 @@ public final class DownloadCenterActivity extends Activity {
         long current = downloadedBytes(item);
         long total = totalBytes(item);
         StringBuilder message = new StringBuilder();
-        message.append("状态：").append(statusLabel(status));
+        message.append("Status: ").append(statusLabel(status));
         String why = taskReason(item);
-        if (why.length() > 0) message.append("\n说明：").append(why);
-        message.append("\n\n文件：").append(item.filename.length() == 0 ? "未命名下载" : item.filename);
-        message.append("\n总大小：").append(total > 0L ? humanBytes(total) : "服务器未提供");
-        message.append("\n已下载：").append(humanBytes(current));
-        if (bytesPerSecond(item) > 0L) message.append("\n速度：").append(humanSpeed(bytesPerSecond(item)));
-        if (item.retryCount > 0) message.append("\n已重试：").append(item.retryCount).append(" 次");
-        message.append("\n创建：").append(formatTime(item.createdAt));
-        if (item.completedAt > 0L) message.append("\n完成：").append(formatTime(item.completedAt));
-        message.append("\n来源：").append(urlHost(item.url));
-        new AlertDialog.Builder(this).setTitle("下载详情").setMessage(message.toString())
-                .setPositiveButton("复制地址", new DialogInterface.OnClickListener() {
+        if (why.length() > 0) message.append("\nDetails: ").append(why);
+        message.append("\n\nFile: ").append(item.filename.length() == 0 ? "Unnamed download" : item.filename);
+        message.append("\nTotal size: ").append(total > 0L ? humanBytes(total) : "Not provided by server");
+        message.append("\nDownloaded: ").append(humanBytes(current));
+        if (bytesPerSecond(item) > 0L) message.append("\nSpeed: ").append(humanSpeed(bytesPerSecond(item)));
+        if (item.retryCount > 0) message.append("\nRetries: ").append(item.retryCount).append(" time(s)");
+        message.append("\nCreated: ").append(formatTime(item.createdAt));
+        if (item.completedAt > 0L) message.append("\nCompleted: ").append(formatTime(item.completedAt));
+        message.append("\nSource: ").append(urlHost(item.url));
+        new AlertDialog.Builder(this).setTitle("Download Details").setMessage(message.toString())
+                .setPositiveButton("Copy URL", new DialogInterface.OnClickListener() {
                     @Override public void onClick(DialogInterface dialog, int which) {
                         android.content.ClipboardManager clipboard =
                                 (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                         if (clipboard != null) clipboard.setPrimaryClip(
-                                android.content.ClipData.newPlainText("下载地址", item.url));
-                        toast("地址已复制");
+                                android.content.ClipData.newPlainText("Download URL", item.url));
+                        toast("URL copied");
                     }
-                }).setNegativeButton("关闭", null).show();
+                }).setNegativeButton("Close", null).show();
     }
 
     private void openFile(DownloadStore.Item item, boolean share) {
@@ -696,18 +696,18 @@ public final class DownloadCenterActivity extends Activity {
         if (fresh != null) item = fresh;
         try {
             Uri uri = downloadedUri(item);
-            if (uri == null) { toast("文件已移动、删除或尚未完成"); return; }
+            if (uri == null) { toast("File was moved, deleted, or is not yet complete"); return; }
             String mime = DownloadFileTypes.mimeForOpen(getContentResolver(), uri, item.filename, item.mime);
             if (!share && DownloadFileTypes.isApk(item.filename, mime) && Build.VERSION.SDK_INT >= 26 &&
                     !getPackageManager().canRequestPackageInstalls()) {
-                new AlertDialog.Builder(this).setTitle("允许安装 APK")
-                        .setMessage("Android 要求先允许 Median 安装未知来源应用。授权后再次点击打开。")
-                        .setPositiveButton("去设置", new DialogInterface.OnClickListener() {
+                new AlertDialog.Builder(this).setTitle("Allow APK Installation")
+                        .setMessage("Android requires permission for Median to install unknown apps. Grant access and tap Open again.")
+                        .setPositiveButton("Open Settings", new DialogInterface.OnClickListener() {
                             @Override public void onClick(DialogInterface dialog, int which) {
                                 startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
                                         Uri.parse("package:" + getPackageName())));
                             }
-                        }).setNegativeButton("取消", null).show();
+                        }).setNegativeButton("Cancel", null).show();
                 return;
             }
             Intent intent;
@@ -721,8 +721,8 @@ public final class DownloadCenterActivity extends Activity {
             }
             intent.setClipData(ClipData.newRawUri(item.filename, uri));
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(share ? Intent.createChooser(intent, "分享下载文件") : intent);
-        } catch (Exception error) { toast("没有应用能打开此文件，或文件已经移动"); }
+            startActivity(share ? Intent.createChooser(intent, "Share downloaded file") : intent);
+        } catch (Exception error) { toast("No app can open this file, or the file was moved"); }
     }
 
     private Uri downloadedUri(DownloadStore.Item item) {
@@ -737,19 +737,19 @@ public final class DownloadCenterActivity extends Activity {
     private String taskTelemetry(DownloadStore.Item item, String status, long current, long total) {
         StringBuilder line = new StringBuilder();
         if (DownloadStore.STATUS_COMPLETED.equals(status)) {
-            line.append(total > 0L ? "总计 " + humanBytes(total) : "下载完成");
+            line.append(total > 0L ? "Total " + humanBytes(total) : "Download complete");
             if (item.completedAt > 0L) line.append(" · ").append(shortTime(item.completedAt));
             return line.toString();
         }
         if (total > 0L) {
             int progress = DownloadCenterPolicy.progressPermille(current, total);
-            line.append(progressText(progress)).append(" · 已下载 ").append(humanBytes(current))
-                    .append(" / 总计 ").append(humanBytes(total));
+            line.append(progressText(progress)).append(" · Downloaded ").append(humanBytes(current))
+                    .append(" / Total ").append(humanBytes(total));
         }
-        else if (current > 0L) line.append("已下载 ").append(humanBytes(current)).append(" · 总大小未知");
-        else if (isActiveStatus(status)) line.append("正在连接 · 正在获取文件大小");
-        else if (DownloadStore.STATUS_PAUSED.equals(status)) line.append("等待继续");
-        else line.append("未下载");
+        else if (current > 0L) line.append("Downloaded ").append(humanBytes(current)).append(" · Total size unknown");
+        else if (isActiveStatus(status)) line.append("Connecting · Fetching file size");
+        else if (DownloadStore.STATUS_PAUSED.equals(status)) line.append("Paused");
+        else line.append("Not downloaded");
         long speed = bytesPerSecond(item);
         if (speed > 0L && isActiveStatus(status)) line.append(" · ").append(humanSpeed(speed));
         long eta = speed > 0L && total > current ? (total - current) / speed : item.etaSeconds;
@@ -825,27 +825,27 @@ public final class DownloadCenterActivity extends Activity {
     }
 
     private static String downloadReason(int reason) {
-        if (reason == DownloadManager.PAUSED_WAITING_TO_RETRY) return "等待自动重试";
-        if (reason == DownloadManager.PAUSED_WAITING_FOR_NETWORK) return "等待网络";
-        if (reason == DownloadManager.PAUSED_QUEUED_FOR_WIFI) return "等待 Wi-Fi";
-        if (reason == DownloadManager.ERROR_CANNOT_RESUME) return "服务器不允许续传";
-        if (reason == DownloadManager.ERROR_DEVICE_NOT_FOUND) return "存储不可用";
-        if (reason == DownloadManager.ERROR_FILE_ALREADY_EXISTS) return "文件已存在";
-        if (reason == DownloadManager.ERROR_FILE_ERROR) return "无法写入文件";
-        if (reason == DownloadManager.ERROR_HTTP_DATA_ERROR) return "网络数据中断";
-        if (reason == DownloadManager.ERROR_INSUFFICIENT_SPACE) return "存储空间不足";
-        if (reason >= 400 && reason <= 599) return "服务器返回 HTTP " + reason;
-        return "下载已中断";
+        if (reason == DownloadManager.PAUSED_WAITING_TO_RETRY) return "Waiting for automatic retry";
+        if (reason == DownloadManager.PAUSED_WAITING_FOR_NETWORK) return "Waiting for network";
+        if (reason == DownloadManager.PAUSED_QUEUED_FOR_WIFI) return "Waiting for Wi-Fi";
+        if (reason == DownloadManager.ERROR_CANNOT_RESUME) return "Server does not support resume";
+        if (reason == DownloadManager.ERROR_DEVICE_NOT_FOUND) return "Storage unavailable";
+        if (reason == DownloadManager.ERROR_FILE_ALREADY_EXISTS) return "File already exists";
+        if (reason == DownloadManager.ERROR_FILE_ERROR) return "Cannot write file";
+        if (reason == DownloadManager.ERROR_HTTP_DATA_ERROR) return "Network data interrupted";
+        if (reason == DownloadManager.ERROR_INSUFFICIENT_SPACE) return "Insufficient storage space";
+        if (reason >= 400 && reason <= 599) return "Server returned HTTP " + reason;
+        return "Download interrupted";
     }
 
     private static String statusLabel(String status) {
-        if (DownloadStore.STATUS_COMPLETED.equals(status)) return "完成";
-        if (DownloadStore.STATUS_FAILED.equals(status)) return "失败";
-        if (DownloadStore.STATUS_CANCELLED.equals(status)) return "已取消";
-        if (DownloadStore.STATUS_PAUSED.equals(status)) return "暂停";
-        if (DownloadStore.STATUS_WAITING.equals(status)) return "等待";
-        if (DownloadStore.STATUS_PENDING.equals(status)) return "准备";
-        return "下载中";
+        if (DownloadStore.STATUS_COMPLETED.equals(status)) return "Completed";
+        if (DownloadStore.STATUS_FAILED.equals(status)) return "Failed";
+        if (DownloadStore.STATUS_CANCELLED.equals(status)) return "Cancelled";
+        if (DownloadStore.STATUS_PAUSED.equals(status)) return "Pause";
+        if (DownloadStore.STATUS_WAITING.equals(status)) return "Waiting";
+        if (DownloadStore.STATUS_PENDING.equals(status)) return "Pending";
+        return "Downloading";
     }
 
     private static int statusColor(String status) {
@@ -859,19 +859,19 @@ public final class DownloadCenterActivity extends Activity {
         try {
             StatFs stat = new StatFs(Environment.getDataDirectory().getAbsolutePath());
             return humanBytes(stat.getAvailableBytes());
-        } catch (RuntimeException ignored) { return "未知"; }
+        } catch (RuntimeException ignored) { return "Unknown"; }
     }
 
     private String urlHost(String raw) {
         try { return NetworkSecurity.normalizedHost(NetworkSecurity.parseHttpUrl(raw)); }
-        catch (Exception ignored) { return "未知"; }
+        catch (Exception ignored) { return "Unknown"; }
     }
 
     private static String filterName(int index) {
-        if (index == FILTER_ACTIVE) return "进行中";
-        if (index == FILTER_COMPLETED) return "完成";
-        if (index == FILTER_PROBLEM) return "异常";
-        return "全部";
+        if (index == FILTER_ACTIVE) return "Active";
+        if (index == FILTER_COMPLETED) return "Completed";
+        if (index == FILTER_PROBLEM) return "Issues";
+        return "All";
     }
 
     private Button button(String label, boolean compact, boolean selected) {
@@ -923,9 +923,9 @@ public final class DownloadCenterActivity extends Activity {
     }
 
     private static String humanDuration(long seconds) {
-        if (seconds < 60L) return Math.max(1L, seconds) + " 秒";
-        if (seconds < 3600L) return (seconds / 60L) + " 分";
-        return (seconds / 3600L) + " 小时 " + ((seconds % 3600L) / 60L) + " 分";
+        if (seconds < 60L) return Math.max(1L, seconds) + " sec";
+        if (seconds < 3600L) return (seconds / 60L) + " min";
+        return (seconds / 3600L) + " hr " + ((seconds % 3600L) / 60L) + " min";
     }
 
     private static String shortTime(long millis) {
@@ -933,7 +933,7 @@ public final class DownloadCenterActivity extends Activity {
     }
 
     private static String formatTime(long millis) {
-        if (millis <= 0L) return "未知";
+        if (millis <= 0L) return "Unknown";
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date(millis));
     }
 

@@ -30,7 +30,7 @@ final class PageAssistant {
     PageAssistant(Context context) { this.context = context.getApplicationContext(); }
 
     void toggleReader(WebView view, boolean dark, final Callback<String> callback) {
-        if (view == null) { callback.onResult(null, new IllegalArgumentException("没有活动页面")); return; }
+        if (view == null) { callback.onResult(null, new IllegalArgumentException("No active page")); return; }
         String css = "#__median_reader{position:fixed;inset:0;z-index:2147483647;overflow:auto;padding:28px 7vw 80px;background:" +
                 (dark ? "#17191c;color:#e8eaed" : "#faf8f3;color:#202124") +
                 ";font:18px/1.78 system-ui,sans-serif;box-sizing:border-box;overflow-wrap:anywhere}#__median_reader article{max-width:760px;margin:auto;min-width:0}#__median_reader h1{font-size:2em;line-height:1.25}#__median_reader img,#__median_reader video,#__median_reader svg{max-width:100%;height:auto}#__median_reader table{display:block;width:100%;max-width:100%;overflow-x:auto;float:none!important;position:static!important;border-collapse:collapse}#__median_reader figure,#__median_reader aside,#__median_reader section,#__median_reader div{max-width:100%;box-sizing:border-box;float:none!important;position:static!important;inset:auto!important}#__median_reader td,#__median_reader th{max-width:100%;overflow-wrap:anywhere}#__median_reader a{color:" +
@@ -52,7 +52,7 @@ final class PageAssistant {
     }
 
     void pageInfo(WebView view, final Callback<JSONObject> callback) {
-        if (view == null) { callback.onResult(null, new IllegalArgumentException("没有活动页面")); return; }
+        if (view == null) { callback.onResult(null, new IllegalArgumentException("No active page")); return; }
         String js = "(function(){var t=(document.body&&document.body.innerText||'').trim();return JSON.stringify({title:document.title,url:location.href,lang:document.documentElement.lang||'',charset:document.characterSet||'',characters:t.length,words:(t.match(/[A-Za-z0-9]+|[㐀-鿿]/g)||[]).length,links:document.links.length,images:document.images.length,forms:document.forms.length,scripts:document.scripts.length});})();";
         view.evaluateJavascript(js, new ValueCallback<String>() {
             @Override public void onReceiveValue(String value) {
@@ -63,7 +63,7 @@ final class PageAssistant {
     }
 
     void speak(WebView view, final Callback<Boolean> callback) {
-        if (view == null) { callback.onResult(Boolean.FALSE, new IllegalArgumentException("没有活动页面")); return; }
+        if (view == null) { callback.onResult(Boolean.FALSE, new IllegalArgumentException("No active page")); return; }
         final long requestGeneration = ++speechGeneration;
         String js = "(function(){var r=document.getElementById('__median_reader'),e=r||document.querySelector('article,[role=main],main')||document.body,t=(e&&e.innerText||'').replace(/\\s+/g,' ').trim();return Array.from(t).slice(0,60000).join('');})();";
         view.evaluateJavascript(js, new ValueCallback<String>() {
@@ -71,7 +71,7 @@ final class PageAssistant {
                 if (shutdown || requestGeneration != speechGeneration) return;
                 try {
                     String text = decode(value);
-                    if (text.length() < 2) throw new IllegalStateException("页面没有可朗读文字");
+                    if (text.length() < 2) throw new IllegalStateException("No readable text on this page");
                     startSpeech(text, callback, requestGeneration);
                 } catch (Exception e) { callback.onResult(Boolean.FALSE, e); }
             }
@@ -116,7 +116,7 @@ final class PageAssistant {
                     pendingCallback = null;
                     pendingSpeech = null;
                     pendingGeneration = 0L;
-                    if (result != null) result.onResult(Boolean.FALSE, new IllegalStateException("系统朗读引擎不可用"));
+                    if (result != null) result.onResult(Boolean.FALSE, new IllegalStateException("System text-to-speech engine is unavailable"));
                 }
             }
         });
@@ -163,7 +163,7 @@ final class PageAssistant {
             start = end;
         }
         if (result != null) result.onResult(Boolean.valueOf(status == TextToSpeech.SUCCESS),
-                status == TextToSpeech.SUCCESS ? null : new IllegalStateException("无法开始朗读"));
+                status == TextToSpeech.SUCCESS ? null : new IllegalStateException("Unable to start reading aloud"));
     }
 
     private static String decode(String value) throws Exception {

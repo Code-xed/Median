@@ -63,7 +63,7 @@ final class HomeImageStore {
     }
 
     void save(Uri uri, Kind kind) throws IOException {
-        if (uri == null) throw new IOException("没有选择图片");
+        if (uri == null) throw new IOException("No image selected");
         rejectOversizedSource(uri, kind);
         int rotation = readRotation(uri);
         Bitmap decoded = null;
@@ -74,7 +74,7 @@ final class HomeImageStore {
             decode(uri, bounds);
             if (bounds.outWidth <= 0 || bounds.outHeight <= 0 || bounds.outWidth > 32768 || bounds.outHeight > 32768 ||
                     (long) bounds.outWidth * (long) bounds.outHeight > 300_000_000L)
-                throw new IOException("无法识别图片或图片尺寸过大");
+                throw new IOException("Unrecognized image or dimensions too large");
 
             int limit = kind == Kind.WALLPAPER ? WALLPAPER_MAX_DIMENSION : LOGO_MAX_DIMENSION;
             int sample = 1;
@@ -84,13 +84,13 @@ final class HomeImageStore {
             options.inSampleSize = sample;
             options.inPreferredConfig = kind == Kind.WALLPAPER ? Bitmap.Config.RGB_565 : Bitmap.Config.ARGB_8888;
             decoded = decode(uri, options);
-            if (decoded == null) throw new IOException("图片解码失败");
+            if (decoded == null) throw new IOException("Failed to decode image");
             transformed = rotate(decoded, rotation);
             if (transformed != decoded) { decoded.recycle(); decoded = null; }
             transformed = scaleDown(transformed, limit);
             writeAtomic(transformed, kind);
         } catch (OutOfMemoryError exhausted) {
-            throw new IOException("图片过大，设备内存不足");
+            throw new IOException("Image too large; insufficient memory");
         } finally {
             if (decoded != null && decoded != transformed && !decoded.isRecycled()) decoded.recycle();
             if (transformed != null && !transformed.isRecycled()) transformed.recycle();
@@ -101,7 +101,7 @@ final class HomeImageStore {
         InputStream input = null;
         try {
             input = context.getContentResolver().openInputStream(uri);
-            if (input == null) throw new IOException("无法读取所选图片");
+            if (input == null) throw new IOException("Unable to read selected image");
             return BitmapFactory.decodeStream(input, null, options);
         } finally {
             if (input != null) try { input.close(); } catch (IOException ignored) {}
@@ -115,7 +115,7 @@ final class HomeImageStore {
             catch (IOException unavailableLength) { return; }
             long length = descriptor == null ? -1L : descriptor.getLength();
             long limit = kind == Kind.WALLPAPER ? WALLPAPER_MAX_SOURCE : LOGO_MAX_SOURCE;
-            if (length > limit) throw new IOException(kind == Kind.WALLPAPER ? "壁纸原图不能超过 40 MB" : "Logo 原图不能超过 16 MB");
+            if (length > limit) throw new IOException(kind == Kind.WALLPAPER ? "Source wallpaper cannot exceed 40 MB" : "Source logo cannot exceed 16 MB");
         } finally {
             if (descriptor != null) try { descriptor.close(); } catch (IOException ignored) {}
         }
@@ -163,10 +163,10 @@ final class HomeImageStore {
             output = atomic.startWrite();
             Bitmap.CompressFormat format = kind == Kind.WALLPAPER ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG;
             int quality = kind == Kind.WALLPAPER ? 84 : 100;
-            if (!image.compress(format, quality, output)) throw new IOException("图片压缩失败");
+            if (!image.compress(format, quality, output)) throw new IOException("Failed to compress image");
             output.flush();
             long limit = kind == Kind.WALLPAPER ? WALLPAPER_MAX_FILE : LOGO_MAX_FILE;
-            if (output.getChannel().size() > limit) throw new IOException("处理后的图片仍然过大");
+            if (output.getChannel().size() > limit) throw new IOException("Processed image is still too large");
             atomic.finishWrite(output);
             output = null;
         } catch (IOException error) {
@@ -174,7 +174,7 @@ final class HomeImageStore {
             throw error;
         } catch (RuntimeException error) {
             if (output != null) atomic.failWrite(output);
-            throw new IOException("无法保存图片", error);
+            throw new IOException("Unable to save image", error);
         }
     }
 

@@ -69,7 +69,7 @@ final class UserScriptStore {
         }
 
         String id = "";
-        String name = "未命名脚本";
+        String name = "Unnamed Script";
         String version = "";
         String namespace = "";
         String description = "";
@@ -150,7 +150,7 @@ final class UserScriptStore {
     }
 
     synchronized void save(Script script) {
-        if (script == null || script.code == null) throw new IllegalArgumentException("脚本内容无效");
+        if (script == null || script.code == null) throw new IllegalArgumentException("Invalid script content");
         prepare(script);
         boolean replaced = false;
         for (int i = 0; i < cache.size(); i++) {
@@ -189,9 +189,9 @@ final class UserScriptStore {
     synchronized String exportJson() { return serializeCacheLocked(); }
 
     synchronized int importJson(String raw) throws Exception {
-        if (raw == null) throw new IllegalArgumentException("脚本备份为空");
+        if (raw == null) throw new IllegalArgumentException("Script backup is empty");
         new JSONArray(raw);
-        if (!decodeCache(raw)) throw new IllegalArgumentException("脚本备份损坏");
+        if (!decodeCache(raw)) throw new IllegalArgumentException("Script backup is corrupted");
         persist();
         return cache.size();
     }
@@ -266,10 +266,10 @@ final class UserScriptStore {
     }
 
     Script parseUserScript(String source, String sourceUrl) throws IllegalArgumentException {
-        if (source == null || source.length() == 0) throw new IllegalArgumentException("脚本内容为空");
+        if (source == null || source.length() == 0) throw new IllegalArgumentException("Script content is empty");
         int start = source.indexOf("==UserScript==");
         int end = source.indexOf("==/UserScript==");
-        if (start < 0 || end <= start) throw new IllegalArgumentException("不是有效的 UserScript");
+        if (start < 0 || end <= start) throw new IllegalArgumentException("Not a valid UserScript");
 
         Script script = new Script();
         script.sourceUrl = sourceUrl == null ? "" : sourceUrl;
@@ -295,7 +295,7 @@ final class UserScriptStore {
             String key = space < 0 ? meta : meta.substring(0, space).trim();
             String value = space < 0 ? "" : meta.substring(space + 1).trim();
             if (value.length() > MAX_METADATA_VALUE_LENGTH)
-                throw new IllegalArgumentException("用户脚本元数据过长");
+                throw new IllegalArgumentException("UserScript metadata value is too long");
             String lowerKey = key.toLowerCase(Locale.US);
             if (lowerKey.equals("name")) fallbackName = value;
             else if (lowerKey.startsWith("name:")) {
@@ -323,7 +323,7 @@ final class UserScriptStore {
             else if (lowerKey.equals("updateurl")) script.updateUrl = value;
         }
         script.name = localizedName.length() > 0 ? localizedName : (fallbackName.length() > 0 ? fallbackName :
-                (anyLocalizedName.length() > 0 ? anyLocalizedName : "未命名脚本"));
+                (anyLocalizedName.length() > 0 ? anyLocalizedName : "Unnamed Script"));
         script.description = localizedDescription.length() > 0 ? localizedDescription :
                 (fallbackDescription.length() > 0 ? fallbackDescription : anyLocalizedDescription);
         if (script.matches.size() == 0) script.matches.add("*://*/*");
@@ -710,7 +710,7 @@ final class UserScriptStore {
                 if (object == null) continue;
                 Script script = new Script();
                 script.id = object.optString("id", String.valueOf(i));
-                script.name = object.optString("name", "未命名脚本");
+                script.name = object.optString("name", "Unnamed Script");
                 script.version = object.optString("version", "");
                 script.namespace = object.optString("namespace", "");
                 script.description = object.optString("description", "");

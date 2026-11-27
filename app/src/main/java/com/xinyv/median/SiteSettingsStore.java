@@ -121,14 +121,14 @@ final class SiteSettingsStore {
     synchronized String exportJson() { return serialize(snapshotLocked()); }
 
     void importJson(String raw) throws Exception {
-        if (raw == null || raw.length() > 1024 * 1024) throw new IllegalArgumentException("网站设置超过限制");
+        if (raw == null || raw.length() > 1024 * 1024) throw new IllegalArgumentException("Site settings exceed size limit");
         HashMap<String, SiteSettings> restored = parse(raw);
         synchronized (this) {
-            if (closed) throw new IllegalStateException("网站设置存储已关闭");
+            if (closed) throw new IllegalStateException("Site settings store is closed");
             if (io != null) io.removeCallbacks(writer);
             generation++;
             if (!prefs.edit().putString(KEY, serialize(restored)).commit())
-                throw new IllegalStateException("网站设置保存失败");
+                throw new IllegalStateException("Failed to save site settings");
             cache.clear();
             cache.putAll(restored);
             dirty = false;

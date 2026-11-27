@@ -27,7 +27,7 @@ final class ExternalDownloadIntents {
 
         Intent typedView = new Intent(Intent.ACTION_VIEW);
         typedView.setDataAndType(target, "application/octet-stream");
-        typedView.putExtra(Intent.EXTRA_TITLE, "Median 下载");
+        typedView.putExtra(Intent.EXTRA_TITLE, "Median Download");
         addHandlers(context, typedView, seen, result);
 
         // Some downloaders accept only shared text. Include them even when browsers
@@ -35,12 +35,12 @@ final class ExternalDownloadIntents {
         Intent share = new Intent(Intent.ACTION_SEND);
         share.setType("text/plain");
         share.putExtra(Intent.EXTRA_TEXT, target.toString());
-        share.putExtra(Intent.EXTRA_SUBJECT, "Median 下载");
-        share.putExtra(Intent.EXTRA_TITLE, "Median 下载");
+        share.putExtra(Intent.EXTRA_SUBJECT, "Median Download");
+        share.putExtra(Intent.EXTRA_TITLE, "Median Download");
         addHandlers(context, share, seen, result);
 
         Intent view = new Intent(Intent.ACTION_VIEW, target);
-        view.putExtra(Intent.EXTRA_TITLE, "Median 下载");
+        view.putExtra(Intent.EXTRA_TITLE, "Median Download");
         addHandlers(context, view, seen, result);
         return result;
     }
@@ -66,7 +66,7 @@ final class ExternalDownloadIntents {
         String[] labels = new String[candidates.size()];
         for (int i = 0; i < candidates.size(); i++) {
             ComponentName component = candidates.get(i).getComponent();
-            String label = component == null ? "外部应用" : component.getPackageName();
+            String label = component == null ? "External app" : component.getPackageName();
             if (component != null) try {
                 ActivityInfo info = context.getPackageManager().getActivityInfo(component, 0);
                 CharSequence name = info.loadLabel(context.getPackageManager());

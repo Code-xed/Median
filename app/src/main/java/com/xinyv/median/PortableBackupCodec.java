@@ -57,23 +57,23 @@ final class PortableBackupCodec {
 
     static JSONObject decrypt(byte[] encoded, char[] password) throws Exception {
         requirePassword(password);
-        if (encoded == null || encoded.length == 0 || encoded.length > 20 * 1024 * 1024) throw new IllegalArgumentException("备份文件大小无效");
+        if (encoded == null || encoded.length == 0 || encoded.length > 20 * 1024 * 1024) throw new IllegalArgumentException("Invalid backup file size");
         try {
             JSONObject envelope = new JSONObject(new String(encoded, UTF8));
             if (!"median-encrypted-backup".equals(envelope.optString("format")) || envelope.optInt("version", 0) != 1)
-                throw new IllegalArgumentException("不是受支持的 Median 加密备份");
+                throw new IllegalArgumentException("Not a supported Median encrypted backup");
             int iterations = envelope.optInt("iterations", 0);
-            if (iterations < 100000 || iterations > 1000000) throw new IllegalArgumentException("备份密钥参数无效");
+            if (iterations < 100000 || iterations > 1000000) throw new IllegalArgumentException("Invalid backup key derivation parameters");
             byte[] salt = Base64.decode(envelope.getString("salt"), Base64.NO_WRAP);
             byte[] iv = Base64.decode(envelope.getString("iv"), Base64.NO_WRAP);
             byte[] encrypted = Base64.decode(envelope.getString("ciphertext"), Base64.NO_WRAP);
-            if (salt.length != 16 || iv.length != 12) throw new IllegalArgumentException("备份加密参数无效");
+            if (salt.length != 16 || iv.length != 12) throw new IllegalArgumentException("Invalid backup encryption parameters");
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             cipher.init(Cipher.DECRYPT_MODE, derive(password, salt, iterations), new GCMParameterSpec(128, iv));
             cipher.updateAAD(AAD);
             byte[] plain = cipher.doFinal(encrypted);
             try {
-                if (plain.length > 16 * 1024 * 1024) throw new IllegalArgumentException("解密数据超过限制");
+                if (plain.length > 16 * 1024 * 1024) throw new IllegalArgumentException("Decrypted data exceeds size limit");
                 return new JSONObject(new String(plain, UTF8));
             }
             finally { Arrays.fill(plain, (byte) 0); }
@@ -90,6 +90,6 @@ final class PortableBackupCodec {
     }
 
     private static void requirePassword(char[] password) {
-        if (password == null || password.length < 10 || password.length > 256) throw new IllegalArgumentException("备份口令需为 10–256 个字符");
+        if (password == null || password.length < 10 || password.length > 256) throw new IllegalArgumentException("Backup passphrase must be 10–256 characters");
     }
 }

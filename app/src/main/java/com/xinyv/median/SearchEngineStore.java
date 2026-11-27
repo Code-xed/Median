@@ -75,7 +75,7 @@ final class SearchEngineStore {
     }
 
     synchronized String label(String id) {
-        if ("baidu".equals(id)) return "百度";
+        if ("baidu".equals(id)) return "Baidu";
         if ("bing".equals(id)) return "Bing";
         if ("google".equals(id)) return "Google";
         Engine engine = get(id);
@@ -117,11 +117,11 @@ final class SearchEngineStore {
                 String id = item.optString("id", "").trim();
                 if (!id.startsWith("custom:") || get(id) != null)
                     id = "custom:" + UrlCleaner.stableId(template + "|" + i + "|" + System.nanoTime());
-                custom.add(new Engine(id, cleanName(item.optString("name", "自定义")), template));
+                custom.add(new Engine(id, cleanName(item.optString("name", "Custom")), template));
             }
         }
         if (custom.size() == 0 && validTemplate(legacyTemplate)) {
-            custom.add(new Engine("custom:" + UrlCleaner.stableId(legacyTemplate), "自定义", legacyTemplate.trim()));
+            custom.add(new Engine("custom:" + UrlCleaner.stableId(legacyTemplate), "Custom", legacyTemplate.trim()));
         }
         persist();
     }
@@ -142,7 +142,7 @@ final class SearchEngineStore {
         if (custom.size() > 0) return;
         String legacy = prefs.getString("custom_search_template", "");
         if (!validTemplate(legacy)) return;
-        Engine migrated = add("自定义", legacy);
+        Engine migrated = add("Custom", legacy);
         if ("custom".equals(prefs.getString("search_engine", "google")))
             prefs.edit().putString("search_engine", migrated.id).apply();
     }
@@ -157,7 +157,7 @@ final class SearchEngineStore {
                 String id = item.optString("id", "").trim();
                 String template = item.optString("template", "").trim();
                 if (!id.startsWith("custom:") || !validTemplate(template) || get(id) != null) continue;
-                custom.add(new Engine(id, cleanName(item.optString("name", "自定义")), template));
+                custom.add(new Engine(id, cleanName(item.optString("name", "Custom")), template));
             }
         } catch (Exception ignored) {
             custom.clear();
@@ -170,7 +170,7 @@ final class SearchEngineStore {
 
     private static String cleanName(String value) {
         String name = value == null ? "" : value.trim();
-        if (name.length() == 0) name = "自定义";
+        if (name.length() == 0) name = "Custom";
         return UiText.truncate(name, 32);
     }
 }

@@ -108,7 +108,7 @@ final class PasswordVault {
             @Override public List<Credential> run() throws Exception {
                 String normalized = normalizeHost(host);
                 ArrayList<Credential> result = new ArrayList<Credential>();
-                if (!validPort(port)) throw new IllegalArgumentException("密码端口无效");
+                if (!validPort(port)) throw new IllegalArgumentException("Invalid credential port");
                 for (Credential item : ensureLoaded()) if (item.host.equals(normalized) && item.port == port) result.add(copy(item));
                 Collections.sort(result, new Comparator<Credential>() {
                     @Override public int compare(Credential left, Credential right) {
@@ -157,9 +157,9 @@ final class PasswordVault {
     void importJson(final String raw, Callback<Integer> callback) {
         submit(new Operation<Integer>() {
             @Override public Integer run() throws Exception {
-                if (raw == null || raw.length() > 8 * 1024 * 1024) throw new IllegalArgumentException("密码备份超过限制");
+                if (raw == null || raw.length() > 8 * 1024 * 1024) throw new IllegalArgumentException("Password backup exceeds size limit");
                 JSONArray array = new JSONArray(raw);
-                if (array.length() > MAX_CREDENTIALS) throw new IllegalArgumentException("密码条目超过 500 条");
+                if (array.length() > MAX_CREDENTIALS) throw new IllegalArgumentException("Password entries exceed 500 limit");
                 ArrayList<Credential> restored = new ArrayList<Credential>();
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject object = array.optJSONObject(i);
@@ -169,7 +169,7 @@ final class PasswordVault {
                     String username = object.optString("username", "");
                     String password = object.optString("password", "");
                     if (!validHost(host) || !validPort(port) || username.length() == 0 || username.length() > 512 ||
-                            password.length() == 0 || password.length() > 8192) throw new IllegalArgumentException("密码条目无效");
+                            password.length() == 0 || password.length() > 8192) throw new IllegalArgumentException("Invalid password entry");
                     Credential credential = new Credential();
                     credential.id = String.valueOf(System.currentTimeMillis()) + "-" + i + "-" + UrlCleaner.stableId(host + ":" + port + "\n" + username);
                     credential.host = host;
@@ -251,7 +251,7 @@ final class PasswordVault {
             if (callback != null) {
                 main.post(new Runnable() {
                     @Override public void run() {
-                        callback.onComplete(null, new IllegalStateException("密码库任务过多，请稍后重试"));
+                        callback.onComplete(null, new IllegalStateException("Password Vault is busy; please try again later"));
                     }
                 });
             }
@@ -262,7 +262,7 @@ final class PasswordVault {
         String normalized = normalizeHost(host);
         if (!validHost(normalized) || !validPort(port) || username == null || username.length() == 0 ||
                 username.length() > 512 || password == null || password.length() == 0 || password.length() > 8192) {
-            throw new IllegalArgumentException("账号数据超过安全限制");
+            throw new IllegalArgumentException("Credential data exceeds security limits");
         }
         ArrayList<Credential> all = ensureLoaded();
         Credential target = null;
@@ -273,7 +273,7 @@ final class PasswordVault {
             }
         }
         if (target == null) {
-            if (all.size() >= MAX_CREDENTIALS) throw new IllegalStateException("密码库已达到 500 条上限");
+            if (all.size() >= MAX_CREDENTIALS) throw new IllegalStateException("Password Vault has reached the 500-entry limit");
             target = new Credential();
             target.id = String.valueOf(System.currentTimeMillis()) + "-" + UrlCleaner.stableId(normalized + ":" + port + "\n" + username);
             all.add(target);
@@ -292,7 +292,7 @@ final class PasswordVault {
         if (prefs.contains(DATA) && prefs.contains(IV)) {
             String json = decryptAndMigrate(prefs.getString(DATA, ""), prefs.getString(IV, ""));
             JSONArray array = new JSONArray(json);
-            if (array.length() > MAX_CREDENTIALS) throw new IllegalStateException("密码库条目超过安全限制");
+            if (array.length() > MAX_CREDENTIALS) throw new IllegalStateException("Password Vault entries exceed security limit");
             for (int i = 0; i < array.length(); i++) {
                 JSONObject object = array.optJSONObject(i);
                 if (object == null) continue;
@@ -303,7 +303,7 @@ final class PasswordVault {
                 credential.password = object.optString("password", "");
                 if (!validHost(credential.host) || !validPort(credential.port) || credential.username.length() == 0 || credential.username.length() > 512 ||
                         credential.password.length() == 0 || credential.password.length() > 8192)
-                    throw new IllegalStateException("密码库内容损坏");
+                    throw new IllegalStateException("Password Vault data is corrupted");
                 credential.id = object.optString("id", "");
                 if (credential.id.length() == 0 || credential.id.length() > 160)
                     credential.id = String.valueOf(i) + '-' + UrlCleaner.stableId(credential.host + ":" + credential.port + "\n" + credential.username);
@@ -410,20 +410,20 @@ final class PasswordVault {
             if (!prefs.edit()
                     .putString(DATA, Base64.encodeToString(encrypted, Base64.NO_WRAP))
                     .putString(IV, Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP))
-                    .commit()) throw new IllegalStateException("无法保存密码库");
+                    .commit()) throw new IllegalStateException("Unable to save Password Vault");
         } finally { Arrays.fill(plain, (byte) 0); }
     }
 
     private String decryptAndMigrate(String cipherText, String ivText) throws Exception {
         if (cipherText.length() == 0 || ivText.length() == 0) return "[]";
-        if (cipherText.length() > 12 * 1024 * 1024 || ivText.length() > 256) throw new IllegalStateException("密码库大小无效");
+        if (cipherText.length() > 12 * 1024 * 1024 || ivText.length() > 256) throw new IllegalStateException("Invalid Password Vault size");
         SecretKey key = existingKey(KEY_ALIAS);
         boolean legacy = false;
         if (key == null) {
             key = existingKey(LEGACY_KEY_ALIAS);
             legacy = key != null;
         }
-        if (key == null) throw new IllegalStateException("密码库密钥不可用");
+        if (key == null) throw new IllegalStateException("Password Vault key is unavailable");
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         GCMParameterSpec spec = new GCMParameterSpec(128, Base64.decode(ivText, Base64.NO_WRAP));
         cipher.init(Cipher.DECRYPT_MODE, key, spec);

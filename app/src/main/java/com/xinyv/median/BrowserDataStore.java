@@ -330,9 +330,9 @@ final class BrowserDataStore {
     JSONObject exportPortable() { return snapshotJson(); }
 
     int importPortable(JSONObject root) throws Exception {
-        if (root == null) throw new IllegalArgumentException("备份中没有浏览数据");
+        if (root == null) throw new IllegalArgumentException("No browsing data found in backup");
         JSONArray savedBookmarks = root.optJSONArray("bookmarks");
-        if (savedBookmarks == null) throw new IllegalArgumentException("备份中没有书签数据");
+        if (savedBookmarks == null) throw new IllegalArgumentException("No bookmark data found in backup");
         ArrayList<Bookmark> loadedBookmarks = new ArrayList<Bookmark>();
         ArrayList<HistoryItem> loadedHistory = new ArrayList<HistoryItem>();
         ArrayList<SessionTab> loadedSession = new ArrayList<SessionTab>();
@@ -377,10 +377,10 @@ final class BrowserDataStore {
     }
 
     int importJson(String raw) throws Exception {
-        if (raw == null || raw.getBytes(UTF8).length > 4 * 1024 * 1024) throw new IllegalArgumentException("备份超过 4 MB");
+        if (raw == null || raw.getBytes(UTF8).length > 4 * 1024 * 1024) throw new IllegalArgumentException("Backup exceeds 4 MB");
         JSONObject object = new JSONObject(raw);
         JSONArray incoming = object.optJSONArray("bookmarks");
-        if (incoming == null) throw new IllegalArgumentException("备份中没有书签数据");
+        if (incoming == null) throw new IllegalArgumentException("No bookmark data found in backup");
         int imported = 0;
         synchronized (lock) {
             HashSet<String> known = new HashSet<String>();

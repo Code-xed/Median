@@ -99,7 +99,7 @@ public final class PrivateActivity extends Activity {
         super.onCreate(state);
         if (android.os.Build.VERSION.SDK_INT < 28) { finish(); return; }
         if (!ensurePrivateDataDirectory()) {
-            Toast.makeText(this, "无法建立隔离的 WebView 数据目录，隐私窗口已关闭", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Unable to create isolated WebView data directory; Private Window closed", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
@@ -195,7 +195,7 @@ public final class PrivateActivity extends Activity {
         } catch (RuntimeException creationError) {
             webView = null;
             if (created != null) try { created.destroy(); } catch (RuntimeException ignored) {}
-            Toast.makeText(this, "网页引擎初始化失败，隐私窗口已关闭", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Web engine initialization failed; Private Window closed", Toast.LENGTH_LONG).show();
             finishAndRemoveTask();
         }
     }
@@ -273,17 +273,17 @@ public final class PrivateActivity extends Activity {
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
         top.setPadding(dp(8), dp(7), dp(8), dp(7));
-        TextView mask = button("◉", "隐私浏览");
+        TextView mask = button("◉", "Private Browsing");
         address = new EditText(this);
         address.setSingleLine(true);
-        address.setHint("隐私搜索或输入网址");
+        address.setHint("Private search or enter URL");
         address.setHintTextColor(Color.rgb(150, 155, 162));
         address.setTextColor(Color.WHITE);
         address.setTextSize(15f);
         address.setBackgroundColor(Color.rgb(43, 46, 51));
         address.setPadding(dp(15), 0, dp(15), 0);
         address.setImeOptions(EditorInfo.IME_ACTION_GO);
-        TextView close = button("×", "关闭隐私浏览");
+        TextView close = button("×", "Close Private Browsing");
         top.addView(mask, new LinearLayout.LayoutParams(dp(42), dp(44)));
         top.addView(address, new LinearLayout.LayoutParams(0, dp(44), 1f));
         top.addView(close, new LinearLayout.LayoutParams(dp(44), dp(44)));
@@ -309,7 +309,7 @@ public final class PrivateActivity extends Activity {
         startupSurface.addView(startupName, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         TextView startupStatus = new TextView(this);
-        startupStatus.setText("正在建立独立隐私会话…");
+        startupStatus.setText("Starting isolated private session…");
         startupStatus.setTextColor(Color.rgb(150, 155, 162));
         startupStatus.setTextSize(12f);
         startupStatus.setGravity(Gravity.CENTER);
@@ -322,11 +322,11 @@ public final class PrivateActivity extends Activity {
 
         LinearLayout bottom = new LinearLayout(this);
         bottom.setGravity(Gravity.CENTER);
-        TextView back = button("‹", "后退");
-        TextView forward = button("›", "前进");
-        TextView home = button("⌂", "隐私主页");
-        TextView reload = button("↻", "刷新");
-        TextView info = button("⋯", "隐私说明");
+        TextView back = button("‹", "Back");
+        TextView forward = button("›", "Forward");
+        TextView home = button("⌂", "Private Home");
+        TextView reload = button("↻", "Reload");
+        TextView info = button("⋯", "Privacy Info");
         TextView[] actions = new TextView[] { back, forward, home, reload, info };
         for (TextView action : actions) bottom.addView(action, new LinearLayout.LayoutParams(0, dp(52), 1f));
         root.addView(bottom, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(56)));
@@ -350,9 +350,9 @@ public final class PrivateActivity extends Activity {
         reload.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { if (webView != null && privateProfileReady) webView.reload(); } });
         info.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                new AlertDialog.Builder(PrivateActivity.this).setTitle("独立隐私会话")
-                        .setMessage("此窗口运行在独立进程和独立 WebView 数据目录中，不记录 Median 历史、书签或标签会话；仍会读取普通窗口已下载的过滤订阅，但不运行持久用户脚本。关闭后会清除 Cookie、缓存及网站存储。下载已禁用，避免系统下载管理器留下记录。运营商、网站和网络管理者仍可能看到访问活动。")
-                        .setPositiveButton("知道了", null).show();
+                new AlertDialog.Builder(PrivateActivity.this).setTitle("Isolated Private Session")
+                        .setMessage("This window runs in a separate process and isolated WebView data directory without recording Median history, bookmarks, or tab sessions. Downloaded filter subscriptions from regular browsing still apply, while persistent user scripts are disabled. Cookies, cache, and site storage are cleared when closed. Downloads are disabled to prevent system download manager records. Your ISP, websites, and network administrators may still see your activity.")
+                        .setPositiveButton("Got it", null).show();
             }
         });
     }
@@ -437,7 +437,7 @@ public final class PrivateActivity extends Activity {
             @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
                 handler.cancel();
                 if (!activityDestroyed && view == webView)
-                    Toast.makeText(PrivateActivity.this, "证书验证失败，已停止加载", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PrivateActivity.this, "Certificate verification failed; loading stopped", Toast.LENGTH_SHORT).show();
             }
             @Override public void onPageFinished(WebView view, String url) {
                 if (activityDestroyed || view != webView) return;
@@ -482,14 +482,14 @@ public final class PrivateActivity extends Activity {
                 try { startActivityForResult(params.createIntent(), FILE_CHOOSER_REQUEST); return true; }
                 catch (Exception e) {
                     finishFileChooser(null);
-                    Toast.makeText(PrivateActivity.this, "文件选择器不可用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PrivateActivity.this, "File picker unavailable", Toast.LENGTH_SHORT).show();
                     return true;
                 }
             }
         });
         target.setDownloadListener(new android.webkit.DownloadListener() {
             @Override public void onDownloadStart(String url, String userAgent, String disposition, String mime, long size) {
-                Toast.makeText(PrivateActivity.this, "隐私窗口不写入系统下载记录", Toast.LENGTH_SHORT).show();
+                Toast.makeText(PrivateActivity.this, "Downloads are disabled in Private Window", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -504,20 +504,20 @@ public final class PrivateActivity extends Activity {
             if ("search".equals(action))
                 loadInput(parsed.getQueryParameter("q"), parsed.getQueryParameter("engine"));
             else if ("bookmarks".equals(action))
-                Toast.makeText(this, "隐私窗口不读取或保存书签", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Bookmarks are disabled in Private Window", Toast.LENGTH_SHORT).show();
             return true;
         }
         String scheme = parsed.getScheme();
         if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
             try { NetworkSecurity.parseHttpUrl(url); return false; }
             catch (Exception invalid) {
-                Toast.makeText(this, "已阻止无效或含凭据的网址", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Blocked invalid URL or URL containing credentials", Toast.LENGTH_SHORT).show();
                 return true;
             }
         }
         if ("about:blank".equalsIgnoreCase(url)) return false;
         if ("data".equalsIgnoreCase(scheme) || "about".equalsIgnoreCase(scheme)) {
-            Toast.makeText(this, "已阻止网页跳转到不透明内部地址", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Blocked page navigation to opaque internal address", Toast.LENGTH_SHORT).show();
             return true;
         }
         confirmExternal(url);
@@ -539,7 +539,7 @@ public final class PrivateActivity extends Activity {
         trustedHome = false;
         if (OmniboxInput.isExplicitHttpUrl(value)) {
             try { loadNetworkUrl(UrlCleaner.cleanTracking(NetworkSecurity.parseHttpUrl(value).toString())); }
-            catch (Exception invalid) { Toast.makeText(this, "网址无效或包含不安全的凭据", Toast.LENGTH_SHORT).show(); }
+            catch (Exception invalid) { Toast.makeText(this, "Invalid URL or unsafe credentials", Toast.LENGTH_SHORT).show(); }
         } else if (OmniboxInput.looksLikeWebAddress(value)) {
             try { loadNetworkUrl(UrlCleaner.cleanTracking(NetworkSecurity.parseHttpsUrl(OmniboxInput.withDefaultHttpsScheme(value)).toString())); }
             catch (Exception invalid) { search(value, engine); }
@@ -632,15 +632,15 @@ public final class PrivateActivity extends Activity {
     }
 
     private void confirmExternal(final String url) {
-        new AlertDialog.Builder(this).setTitle("离开隐私窗口？")
-                .setMessage("外部应用可能记录这次操作。仅在你信任当前网站时继续。")
-                .setPositiveButton("继续", new android.content.DialogInterface.OnClickListener() {
+        new AlertDialog.Builder(this).setTitle("Leave Private Window?")
+                .setMessage("External apps may record this activity. Continue only if you trust this site.")
+                .setPositiveButton("Continue", new android.content.DialogInterface.OnClickListener() {
                     @Override public void onClick(android.content.DialogInterface dialog, int which) {
                         try {
                             Intent intent;
                             if (url.regionMatches(true, 0, "intent:", 0, 7)) {
                                 Intent parsed = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
-                                if (parsed.getData() == null) throw new IllegalArgumentException("外部地址无效");
+                                if (parsed.getData() == null) throw new IllegalArgumentException("Invalid external URL");
                                 intent = new Intent(Intent.ACTION_VIEW, parsed.getData());
                             } else intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                             intent.addCategory(Intent.CATEGORY_BROWSABLE);
@@ -652,9 +652,9 @@ public final class PrivateActivity extends Activity {
                             intent.setFlags(intent.getFlags() & ~unsafeGrants);
                             intent.setClipData(null);
                             startActivity(intent);
-                        } catch (Exception ignored) { Toast.makeText(PrivateActivity.this, "无法打开链接", Toast.LENGTH_SHORT).show(); }
+                        } catch (Exception ignored) { Toast.makeText(PrivateActivity.this, "Unable to open link", Toast.LENGTH_SHORT).show(); }
                     }
-                }).setNegativeButton("取消", null).show();
+                }).setNegativeButton("Cancel", null).show();
     }
 
     private static boolean isHome(String url) { return UrlCleaner.isInternalPage(url, "median-private.invalid"); }

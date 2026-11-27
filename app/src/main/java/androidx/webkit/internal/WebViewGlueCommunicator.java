@@ -24,7 +24,7 @@ public final class WebViewGlueCommunicator {
     private static final String DOCUMENT_START = "DOCUMENT_START_SCRIPT:1";
     private static volatile WebViewProviderFactoryBoundaryInterface factory;
     private static volatile String[] features;
-    private static volatile String state = "尚未加载";
+    private static volatile String state = "Not loaded";
     private static volatile boolean registrationSucceeded;
 
     private WebViewGlueCommunicator() {}
@@ -94,19 +94,19 @@ public final class WebViewGlueCommunicator {
         load();
         PackageInfo info = null;
         try { info = WebView.getCurrentWebViewPackage(); } catch (RuntimeException ignored) {}
-        String provider = info == null ? "未知" : info.packageName + " " + info.versionName;
+        String provider = info == null ? "Unknown" : info.packageName + " " + info.versionName;
         return "System WebView: " + provider
-                + "\nGlue: " + (factory == null ? "不可用" : "可用")
-                + "\nDocument-start: " + (isFeatureSupported(DOCUMENT_START) ? "支持" : "不支持")
-                + "\n注册验证: " + (registrationSucceeded ? "已成功" : "尚未成功")
-                + "\n状态: " + state;
+                + "\nGlue: " + (factory == null ? "Unavailable" : "Available")
+                + "\nDocument-start: " + (isFeatureSupported(DOCUMENT_START) ? "Supported" : "Unsupported")
+                + "\nRegistration verified: " + (registrationSucceeded ? "Succeeded" : "Not yet succeeded")
+                + "\nState: " + state;
     }
 
     public static void invalidate() {
         synchronized (WebViewGlueCommunicator.class) {
             factory = null;
             features = null;
-            state = "尚未加载";
+            state = "Not loaded";
             registrationSucceeded = false;
         }
     }

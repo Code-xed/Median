@@ -8,7 +8,7 @@ final class ErrorText {
     private ErrorText() {}
 
     static String message(Throwable error, int maxLength) {
-        if (error == null) return "未知错误";
+        if (error == null) return "Unknown error";
         String message = error.getMessage();
         if (message == null || (message = message.trim()).length() == 0)
             message = error.getClass().getSimpleName();
