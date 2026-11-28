@@ -746,7 +746,7 @@ public final class DownloadCenterActivity extends Activity {
         String status = effectiveStatus(item);
         if (item.isAdaptive()) {
             if (DownloadStore.STATUS_FAILED.equals(status) || DownloadStore.STATUS_PAUSED.equals(status) ||
-                    DownloadStore.STATUS_WAITING.equals(status)) return value(item.reason);
+                    DownloadStore.STATUS_WAITING.equals(status)) return DownloadCenterPolicy.displayReason(value(item.reason));
             return "";
         }
         SystemState state = systemStates.get(Long.valueOf(item.id));

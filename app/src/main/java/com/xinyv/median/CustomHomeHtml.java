@@ -16,8 +16,8 @@ final class CustomHomeHtml {
             "<main class=\"home\">\n" +
             "  <section class=\"card\">\n" +
             "    <h1>My Home</h1>\n" +
-            "    <p id=\"clock\">这是你的自定义主页</p>\n" +
-            "    <a href=\"https://www.google.com\">打开 Google</a>\n" +
+            "    <p id=\"clock\">This is your custom homepage</p>\n" +
+            "    <a href=\"https://www.google.com\">Open Google</a>\n" +
             "  </section>\n" +
             "</main>\n" +
             "<script>\n" +

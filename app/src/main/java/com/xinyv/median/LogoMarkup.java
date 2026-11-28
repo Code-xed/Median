@@ -38,9 +38,9 @@ final class LogoMarkup {
     }
 
     static Result parse(String raw, int gradientAngle) {
-        if (raw != null && raw.length() > MAX_CODE_LENGTH) return error("Logo 代码不能超过 1024 个字符");
+        if (raw != null && raw.length() > MAX_CODE_LENGTH) return error("Logo code cannot exceed 1024 characters");
         String code = clean(raw);
-        if (code.length() == 0) return error("Logo 代码不能为空");
+        if (code.length() == 0) return error("Logo code cannot be empty");
         StringBuilder html = new StringBuilder(code.length() + 96);
         StringBuilder plain = new StringBuilder(code.length());
         int cursor = 0;
@@ -52,48 +52,48 @@ final class LogoMarkup {
             }
             if (open > cursor) appendText(code.substring(cursor, open), html, plain);
             int headerEnd = code.indexOf(']', open + 1);
-            if (headerEnd < 0) return error("标记缺少 ]");
+            if (headerEnd < 0) return error("Tag is missing ]");
             String header = code.substring(open + 1, headerEnd);
             if (header.startsWith("space=")) {
                 int width;
                 try { width = Integer.parseInt(header.substring(6)); }
-                catch (NumberFormatException invalid) { return error("间隔必须是 0–24 的整数"); }
-                if (width < 0 || width > 24) return error("间隔必须是 0–24 的整数");
+                catch (NumberFormatException invalid) { return error("Spacing must be an integer from 0 to 24"); }
+                if (width < 0 || width > 24) return error("Spacing must be an integer from 0 to 24");
                 html.append("<span class='logo-space' style='width:").append(width).append("px'></span>");
                 if (width > 0) plain.append(' ');
                 cursor = headerEnd + 1;
             } else if (header.startsWith("color=")) {
                 String color = header.substring(6).toUpperCase(java.util.Locale.US);
-                if (!validColor(color)) return error("颜色必须写成 #RRGGBB");
+                if (!validColor(color)) return error("Color must be written as #RRGGBB");
                 int close = code.indexOf("[/color]", headerEnd + 1);
-                if (close < 0) return error("颜色标记缺少 [/color]");
+                if (close < 0) return error("Color tag is missing [/color]");
                 String text = code.substring(headerEnd + 1, close);
-                if (text.indexOf('[') >= 0) return error("颜色标记不能嵌套");
+                if (text.indexOf('[') >= 0) return error("Color tags cannot be nested");
                 html.append("<span style='color:").append(color).append("'>").append(escape(text)).append("</span>");
                 plain.append(text);
                 cursor = close + 8;
             } else if (header.startsWith("gradient=")) {
                 String colors = gradientColors(header.substring(9));
-                if (colors == null) return error("渐变需要 2–4 个 #RRGGBB 颜色，用英文逗号分隔");
+                if (colors == null) return error("Gradient requires 2–4 #RRGGBB colors separated by commas");
                 int close = code.indexOf("[/gradient]", headerEnd + 1);
-                if (close < 0) return error("渐变标记缺少 [/gradient]");
+                if (close < 0) return error("Gradient tag is missing [/gradient]");
                 String text = code.substring(headerEnd + 1, close);
-                if (text.indexOf('[') >= 0) return error("渐变标记不能嵌套");
+                if (text.indexOf('[') >= 0) return error("Gradient tags cannot be nested");
                 html.append("<span class='logo-gradient' style='--logo-gradient:linear-gradient(")
                         .append(safeAngle(gradientAngle)).append("deg,")
                         .append(colors).append(")'>").append(escape(text)).append("</span>");
                 plain.append(text);
                 cursor = close + 11;
             } else {
-                return error("只支持 [color]、[gradient] 和 [space] 标记");
+                return error("Only [color], [gradient], and [space] tags are supported");
             }
             if (plain.codePointCount(0, plain.length()) > MAX_VISIBLE_CODE_POINTS)
-                return error("Logo 文字不能超过 48 个字符");
+                return error("Logo text cannot exceed 48 characters");
         }
         if (plain.codePointCount(0, plain.length()) > MAX_VISIBLE_CODE_POINTS)
-            return error("Logo 文字不能超过 48 个字符");
+            return error("Logo text cannot exceed 48 characters");
         String visible = plain.toString().trim();
-        if (visible.length() == 0) return error("Logo 必须包含可见文字");
+        if (visible.length() == 0) return error("Logo must contain visible text");
         return new Result(html.toString(), visible, null);
     }
 

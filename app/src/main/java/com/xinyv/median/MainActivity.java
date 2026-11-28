@@ -3347,7 +3347,7 @@ public final class MainActivity extends Activity implements Runnable {
         labels.add("新建子文件夹"); iconList.add(BrowserIconView.STORAGE); kindList.add(SHEET_ROW_ACTION);
         if (current != null) {
             labels.add("当前文件夹设置\n重命名与主页显示"); iconList.add(BrowserIconView.SETTINGS); kindList.add(SHEET_ROW_ACTION);
-            labels.add("删除当前文件夹\n子文件夹一并删除，网站移回全部收藏"); iconList.add(BrowserIconView.CLOSE); kindList.add(SHEET_ROW_ACTION);
+            labels.add("Delete current folder\nSubfolders will be deleted; sites move to All Bookmarks"); iconList.add(BrowserIconView.CLOSE); kindList.add(SHEET_ROW_ACTION);
         }
         final int actionCount = labels.size();
         for (BookmarkFolderStore.Folder folder : childFolders) {
@@ -3946,7 +3946,7 @@ public final class MainActivity extends Activity implements Runnable {
         String[] items = new String[] {
                 "页面内查找", "切换沉浸阅读模式", assistant.isSpeaking() ? "停止朗读" : "朗读正文",
                 "页面结构与统计", "TLS 证书与 SHA-256", "保存完整离线页面", "离线页面库 · " + offlineCount + " 页",
-                "分享当前页面", "复制页面地址", "复制无跟踪参数地址", "翻译为简体中文",
+                "分享当前页面", "复制页面地址", "复制无跟踪参数地址", "Translate to Simplified Chinese",
                 "打印或另存为 PDF", "媒体中心 · 已发现 " + mediaSniffer.size() + " 项", "当前页脚本命令"
         };
         int[] icons = new int[] { BrowserIconView.SEARCH, BrowserIconView.INFO, BrowserIconView.SPEED, BrowserIconView.INFO,
@@ -4141,12 +4141,12 @@ public final class MainActivity extends Activity implements Runnable {
                 SHEET_ROW_NAVIGATE, SHEET_ROW_NAVIGATE, SHEET_ROW_NAVIGATE, SHEET_ROW_NAVIGATE
         };
         String[] sections = new String[items.length];
-        sections[0] = "隐私与安全";
+        sections[0] = "Privacy & Security";
         sections[3] = "启动与搜索";
         sections[5] = "界面";
         sections[7] = "资源与数据";
         sections[9] = "信息";
-        showActionSheet("浏览器设置", "轻触开关立即保存 · 返回键只关闭设置", items, icons,
+        showActionSheet("浏览器设置", "Tap switches to save immediately · Back closes settings only", items, icons,
                 kinds, sections, null, new SheetHandler() {
             @Override public void onItem(int which) {
                 if (which == 0) {
@@ -5252,10 +5252,11 @@ public final class MainActivity extends Activity implements Runnable {
         if (DownloadStore.STATUS_COMPLETED.equals(item.status)) {
             return "已完成" + (item.totalBytes > 0L ? " · " + humanBytes(item.totalBytes) : "");
         }
-        if (DownloadStore.STATUS_FAILED.equals(item.status)) return "失败 · " + (item.reason.length() == 0 ? "未知原因" : item.reason);
+        String reason = DownloadCenterPolicy.displayReason(item.reason);
+        if (DownloadStore.STATUS_FAILED.equals(item.status)) return "失败 · " + (reason.length() == 0 ? "未知原因" : reason);
         if (DownloadStore.STATUS_CANCELLED.equals(item.status)) return "已取消";
-        if (DownloadStore.STATUS_PAUSED.equals(item.status)) return "已暂停" + (item.reason.length() == 0 ? "" : " · " + item.reason);
-        if (DownloadStore.STATUS_WAITING.equals(item.status)) return item.reason.length() == 0 ? "等待中" : item.reason;
+        if (DownloadStore.STATUS_PAUSED.equals(item.status)) return "已暂停" + (reason.length() == 0 ? "" : " · " + reason);
+        if (DownloadStore.STATUS_WAITING.equals(item.status)) return reason.length() == 0 ? "等待中" : reason;
         if (DownloadStore.STATUS_PENDING.equals(item.status)) return "准备中";
         long percent = DownloadCenterPolicy.progressPermille(item.downloadedBytes, item.totalBytes) / 10L;
         StringBuilder out = new StringBuilder("下载中");
@@ -5530,9 +5531,8 @@ public final class MainActivity extends Activity implements Runnable {
 
     private void showMediaResourceActions(final MediaResourceSniffer.Resource resource, boolean allowManifestInspection) {
         String lowerUrl = resource.url.toLowerCase(Locale.US);
-        final boolean manifest = allowManifestInspection && ("HLS 流".equals(resource.kind) ||
-                "DASH 流".equals(resource.kind) || "Smooth 流".equals(resource.kind) ||
-                "媒体清单".equals(resource.kind) || resource.mime.contains("mpegurl") ||
+        final boolean manifest = allowManifestInspection && (MediaResourceSniffer.isManifestKind(resource.kindId) ||
+                resource.mime.contains("mpegurl") ||
                 resource.mime.contains("dash+xml") || resource.mime.contains("vnd.ms-sstr") ||
                 lowerUrl.contains(".m3u") || lowerUrl.contains(".mpd") ||
                 lowerUrl.contains(".ism/manifest") || lowerUrl.contains(".isml/manifest"));
@@ -5618,7 +5618,8 @@ public final class MainActivity extends Activity implements Runnable {
             item.url = parsed.url;
             item.mime = "HLS".equals(playlist.format) ? "application/vnd.apple.mpegurl" :
                     ("DASH".equals(playlist.format) ? "application/dash+xml" : "application/vnd.ms-sstr+xml");
-            item.kind = playlist.format + " 子流";
+            item.kindId = "variant";
+            item.kind = playlist.format + " variant";
             item.pageHost = source.pageHost;
             labels[i] = parsed.label;
             icons[i] = BrowserIconView.SPEED;
@@ -5811,7 +5812,7 @@ public final class MainActivity extends Activity implements Runnable {
 
         Button browse = actionButton("浏览 Greasy Fork");
         Button current = actionButton("查找适用于当前网站的脚本");
-        Button link = actionButton("粘贴链接或脚本代码安装");
+        Button link = actionButton("Paste link or script code to install");
         Button updateAll = actionButton("检查并更新全部脚本");
         content.addView(browse);
         content.addView(current);

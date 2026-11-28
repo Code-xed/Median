@@ -97,7 +97,7 @@ final class HomePage {
         if (options.showShortcuts) {
             for (int i = 0; i < count; i++) {
                 Shortcut item = homeShortcuts.get(i);
-                String title = item.title.trim().length() == 0 ? (item.folder ? "文件夹" : host(item.url)) : item.title.trim();
+                String title = item.title.trim().length() == 0 ? (item.folder ? "Folder" : host(item.url)) : item.title.trim();
                 if (title.length() > 18) title = title.substring(0, 18) + "…";
                 if (item.folder) {
                     shortcuts.append("<a class='shortcut' href='median://folder?id=")
@@ -113,7 +113,7 @@ final class HomePage {
                             .append(escape(title)).append("</span></a>");
                 }
             }
-            if (count == 0) shortcuts.append("<button class='empty' onclick=\"return m('median://bookmarks')\">添加常用书签</button>");
+            if (count == 0) shortcuts.append("<button class='empty' onclick=\"return m('median://bookmarks')\">Add frequent bookmarks</button>");
         }
 
         StringBuilder page = new StringBuilder(8200 + shortcuts.length());
@@ -142,7 +142,7 @@ final class HomePage {
                 .append(options.customCss).append("</style></head><body>");
         if (wallpaper) page.append("<div class='wall' style=\"background-image:url('/home-wallpaper?v=").append(options.wallpaperVersion).append("')\"></div><div class='shade'></div>");
         if (options.customHtmlEnabled) {
-            page.append("<iframe class='custom-home' title='自定义主页' sandbox='allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation' src='/home-custom?v=")
+            page.append("<iframe class='custom-home' title='Custom home' sandbox='allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation' src='/home-custom?v=")
                     .append(options.customHtmlVersion).append("'></iframe></body></html>");
             return page.toString();
         }
@@ -158,9 +158,9 @@ final class HomePage {
         if (options.subtitle.length() > 0) page.append("<div class='subtitle'>").append(escape(options.subtitle)).append("</div>");
         else page.append("<div class='subtitle'></div>");
         if (options.showSearch) {
-            page.append("<form id='form'><div class='search'><span class='mag'></span><input id='q' autocomplete='off' enterkeyhint='search' placeholder='搜索或输入网址'></div></form>");
+            page.append("<form id='form'><div class='search'><span class='mag'></span><input id='q' autocomplete='off' enterkeyhint='search' placeholder='Search or enter URL'></div></form>");
             if (options.showEngines) {
-                page.append("<div class='engines'><button class='chip' data-e='google'>Google</button><button class='chip' data-e='baidu'>百度</button><button class='chip' data-e='bing'>Bing</button>");
+                page.append("<div class='engines'><button class='chip' data-e='google'>Google</button><button class='chip' data-e='baidu'>Baidu</button><button class='chip' data-e='bing'>Bing</button>");
                 if (customEngines != null) for (SearchEngineStore.Engine item : customEngines)
                     page.append("<button class='chip' data-e='").append(escape(item.id)).append("'>")
                             .append(escape(item.name)).append("</button>");
@@ -183,9 +183,9 @@ final class HomePage {
     private static String host(String url) {
         try {
             String value = new URI(url).getHost();
-            if (value == null) return "书签";
+            if (value == null) return "Bookmark";
             return value.startsWith("www.") ? value.substring(4) : value;
-        } catch (Exception ignored) { return "书签"; }
+        } catch (Exception ignored) { return "Bookmark"; }
     }
 
     private static String faviconHost(String url) {

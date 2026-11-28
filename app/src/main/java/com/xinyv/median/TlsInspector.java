@@ -24,9 +24,9 @@ final class TlsInspector {
         int responseCode;
 
         String summary() {
-            return "主机：" + host + "\n响应：HTTP " + responseCode + "\n加密套件：" + cipher +
-                    "\n\n证书主体：" + subject + "\n签发者：" + issuer +
-                    "\n有效期：" + validFrom + " 至 " + validUntil + "\nSHA-256：\n" + sha256;
+            return "Host: " + host + "\nResponse: HTTP " + responseCode + "\nCipher suite: " + cipher +
+                    "\n\nSubject: " + subject + "\nIssuer: " + issuer +
+                    "\nValidity: " + validFrom + " to " + validUntil + "\nSHA-256:\n" + sha256;
         }
     }
 
@@ -34,7 +34,7 @@ final class TlsInspector {
 
     static Result inspect(String rawUrl) throws Exception {
         URL url = new URL(rawUrl);
-        if (!"https".equalsIgnoreCase(url.getProtocol())) throw new IllegalArgumentException("当前页面不是 HTTPS");
+        if (!"https".equalsIgnoreCase(url.getProtocol())) throw new IllegalArgumentException("Current page is not HTTPS");
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         try {
             connection.setConnectTimeout(10000);
@@ -47,7 +47,7 @@ final class TlsInspector {
             result.responseCode = connection.getResponseCode();
             result.cipher = value(connection.getCipherSuite());
             Certificate[] chain = connection.getServerCertificates();
-            if (chain.length == 0 || !(chain[0] instanceof X509Certificate)) throw new IllegalStateException("服务器没有返回 X.509 证书");
+            if (chain.length == 0 || !(chain[0] instanceof X509Certificate)) throw new IllegalStateException("Server did not return an X.509 certificate");
             X509Certificate certificate = (X509Certificate) chain[0];
             result.subject = certificate.getSubjectX500Principal().getName();
             result.issuer = certificate.getIssuerX500Principal().getName();
@@ -65,5 +65,5 @@ final class TlsInspector {
         return format.format(date);
     }
 
-    private static String value(String value) { return value == null ? "未知" : value; }
+    private static String value(String value) { return value == null ? "Unknown" : value; }
 }

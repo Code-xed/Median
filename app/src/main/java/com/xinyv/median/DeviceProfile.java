@@ -39,6 +39,6 @@ final class DeviceProfile {
     }
 
     String summary() {
-        return "Android 8+ 优化路径 · API " + sdk + " · Java 堆上限 " + memoryClassMb + "MB" + (lowRam ? " · 低内存设备" : "");
+        return "Android 8+ optimized path · API " + sdk + " · Java heap limit " + memoryClassMb + "MB" + (lowRam ? " · Low-RAM device" : "");
     }
 }

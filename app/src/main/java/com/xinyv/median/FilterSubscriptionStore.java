@@ -92,15 +92,15 @@ final class FilterSubscriptionStore {
     synchronized String exportJson() { return prefs.getString(KEY, "[]"); }
 
     synchronized int importJson(String raw) throws Exception {
-        if (raw == null || raw.length() > 256 * 1024) throw new IllegalArgumentException("过滤订阅设置超过限制");
+        if (raw == null || raw.length() > 256 * 1024) throw new IllegalArgumentException("Filter subscription settings exceed limit");
         JSONArray array = new JSONArray(raw);
-        if (array.length() > MAX_SUBSCRIPTIONS) throw new IllegalArgumentException("过滤订阅超过 32 个");
+        if (array.length() > MAX_SUBSCRIPTIONS) throw new IllegalArgumentException("Filter subscriptions exceed 32");
         for (int i = 0; i < array.length(); i++) {
             JSONObject item = array.optJSONObject(i);
             if (item == null || !isHttps(item.optString("url", "")) || item.optString("url", "").length() > 4096)
-                throw new IllegalArgumentException("过滤订阅地址无效");
+                throw new IllegalArgumentException("Invalid filter subscription URL");
         }
-        if (!prefs.edit().putString(KEY, raw).commit()) throw new IllegalStateException("无法保存过滤订阅");
+        if (!prefs.edit().putString(KEY, raw).commit()) throw new IllegalStateException("Unable to save filter subscriptions");
         File[] oldFiles = directory.listFiles();
         if (oldFiles != null) for (File file : oldFiles) if (file.isFile() &&
                 (file.getName().endsWith(".txt") || file.getName().endsWith(".tmp"))) file.delete();
@@ -116,9 +116,9 @@ final class FilterSubscriptionStore {
 
     synchronized void add(String name, String url) {
         url = url == null ? "" : url.trim();
-        if (!isHttps(url) || url.length() > 4096) throw new IllegalArgumentException("订阅地址必须使用 HTTPS");
-        if (subscriptions.size() >= MAX_SUBSCRIPTIONS) throw new IllegalStateException("最多允许 32 个过滤订阅");
-        for (Subscription item : subscriptions) if (item.url.equals(url)) throw new IllegalArgumentException("订阅已存在");
+        if (!isHttps(url) || url.length() > 4096) throw new IllegalArgumentException("Subscription URL must use HTTPS");
+        if (subscriptions.size() >= MAX_SUBSCRIPTIONS) throw new IllegalStateException("Maximum of 32 filter subscriptions allowed");
+        for (Subscription item : subscriptions) if (item.url.equals(url)) throw new IllegalArgumentException("Subscription already exists");
         Subscription item = new Subscription();
         item.id = canonicalId(url);
         item.name = cleanName(name, hostOf(url));
@@ -165,9 +165,9 @@ final class FilterSubscriptionStore {
         if (!updateInFlight.compareAndSet(false, true)) {
             if (!automatic && automaticUpdateInFlight) {
                 manualUpdatePending.set(true);
-                postResult(callback, 0, 0, 0, "过滤订阅正在自动更新，已排队完整更新");
+                postResult(callback, 0, 0, 0, "Filter subscriptions are auto-updating; full update queued");
             } else {
-                postResult(callback, 0, 0, 0, "过滤订阅正在更新");
+                postResult(callback, 0, 0, 0, "Filter subscriptions are updating");
             }
             return;
         }
@@ -212,7 +212,7 @@ final class FilterSubscriptionStore {
             automaticUpdateInFlight = false;
             manualUpdatePending.set(false);
             updateInFlight.set(false);
-            postResult(callback, 0, 0, 1, "过滤订阅服务正忙");
+            postResult(callback, 0, 0, 1, "Filter subscription service is busy");
         }
     }
 
@@ -247,7 +247,7 @@ final class FilterSubscriptionStore {
     }
 
     private int updateOne(Subscription target) throws Exception {
-        if (!isHttps(target.url)) throw new IllegalArgumentException("非 HTTPS 订阅已拒绝");
+        if (!isHttps(target.url)) throw new IllegalArgumentException("Non-HTTPS subscription rejected");
         HttpURLConnection connection = null;
         try {
             HashMap<String, String> headers = new HashMap<String, String>();
@@ -263,12 +263,12 @@ final class FilterSubscriptionStore {
             }
             if (status < 200 || status >= 300) throw new IllegalArgumentException("HTTP " + status);
             int length = connection.getContentLength();
-            if (length > MAX_BYTES) throw new IllegalArgumentException("订阅超过 12 MB");
+            if (length > MAX_BYTES) throw new IllegalArgumentException("Subscription exceeds 12 MB");
             byte[] bytes = NetworkSecurity.readBounded(connection.getInputStream(), MAX_BYTES,
-                    "下载内容超过大小限制");
+                    "Downloaded content exceeds size limit");
             String text = new String(bytes, UTF8);
             int count = plausibleRuleCount(text);
-            if (count < 10) throw new IllegalArgumentException("订阅内容不像有效规则列表");
+            if (count < 10) throw new IllegalArgumentException("Subscription content does not look like a valid rule list");
             File targetFile = fileFor(target);
             File temporary = new File(directory, targetFile.getName() + ".tmp");
             FileOutputStream output = new FileOutputStream(temporary);
@@ -399,7 +399,7 @@ final class FilterSubscriptionStore {
     }
 
     private static byte[] readFile(File file, int maxBytes) throws Exception {
-        return NetworkSecurity.readBounded(new FileInputStream(file), maxBytes, "下载内容超过大小限制");
+        return NetworkSecurity.readBounded(new FileInputStream(file), maxBytes, "Downloaded content exceeds size limit");
     }
 
     private static boolean isHttps(String url) {
@@ -422,13 +422,13 @@ final class FilterSubscriptionStore {
     }
 
     private static String hostOf(String url) {
-        try { return new URL(url).getHost(); } catch (Exception ignored) { return "自定义订阅"; }
+        try { return new URL(url).getHost(); } catch (Exception ignored) { return "Custom subscription"; }
     }
 
     private static String cleanName(String name, String fallback) {
         String value = name == null ? "" : name.trim();
         if (value.length() == 0) value = fallback;
-        if (value.length() == 0) value = "自定义订阅";
+        if (value.length() == 0) value = "Custom subscription";
         return value.length() > 80 ? value.substring(0, 80) : value;
     }
 

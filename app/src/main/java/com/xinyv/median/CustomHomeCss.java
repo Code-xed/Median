@@ -7,7 +7,7 @@ import java.util.Locale;
 final class CustomHomeCss {
     static final int MAX_BYTES = 32 * 1024;
     static final String EXAMPLE =
-            "/* 示例：更大的圆角搜索框与半透明快捷入口 */\n" +
+            "/* Example: larger rounded search box and translucent shortcut tiles */\n" +
             ".search{border-radius:18px;box-shadow:0 8px 28px rgba(0,0,0,.12)}\n" +
             ".tile{border-radius:18px;background:rgba(255,255,255,.72)}\n" +
             ".brand{letter-spacing:2px}";
@@ -22,17 +22,17 @@ final class CustomHomeCss {
 
     static String error(String value) {
         String clean = value == null ? "" : value.trim();
-        if (clean.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) return "CSS 不能超过 32 KB";
+        if (clean.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) return "CSS cannot exceed 32 KB";
         String lower = clean.toLowerCase(Locale.US);
-        if (lower.contains("</style")) return "CSS 中不能包含 </style>";
-        if (lower.indexOf('\\') >= 0) return "CSS 中不能使用转义序列";
+        if (lower.contains("</style")) return "CSS cannot contain </style>";
+        if (lower.indexOf('\\') >= 0) return "CSS cannot use escape sequences";
         String compact = withoutComments(lower).replace(" ", "").replace("\n", "").replace("\r", "").replace("\t", "");
-        if (compact.contains("</style")) return "CSS 中不能包含 </style>";
-        if (compact.contains("@import")) return "CSS 中不能使用 @import";
+        if (compact.contains("</style")) return "CSS cannot contain </style>";
+        if (compact.contains("@import")) return "CSS cannot use @import";
         if (compact.contains("url(") || compact.contains("http:") || compact.contains("https:") || compact.contains("//"))
-            return "CSS 中不能加载外部 URL";
-        if (compact.contains("expression(")) return "CSS 中不能使用 expression()";
-        if (compact.contains("behavior:") || compact.contains("-moz-binding")) return "CSS 中包含不安全的旧式行为";
+            return "CSS cannot load external URLs";
+        if (compact.contains("expression(")) return "CSS cannot use expression()";
+        if (compact.contains("behavior:") || compact.contains("-moz-binding")) return "CSS contains unsafe legacy behaviors";
         return "";
     }
 

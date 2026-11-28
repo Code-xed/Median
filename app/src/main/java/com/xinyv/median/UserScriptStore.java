@@ -28,7 +28,7 @@ final class UserScriptStore {
         }
 
         String id = "";
-        String name = "未命名脚本";
+        String name = "Untitled script";
         String version = "";
         String namespace = "";
         String description = "";
@@ -45,7 +45,7 @@ final class UserScriptStore {
         boolean quarantined;
         String disabledReason = "";
         int riskScore;
-        String riskSummary = "低风险";
+        String riskSummary = "Low risk";
         long installedAt;
         long updatedAt;
         long lastUpdateCheck;
@@ -107,7 +107,7 @@ final class UserScriptStore {
     }
 
     synchronized void save(Script script) {
-        if (script == null || script.code == null) throw new IllegalArgumentException("脚本内容无效");
+        if (script == null || script.code == null) throw new IllegalArgumentException("Invalid script content");
         prepare(script);
         boolean replaced = false;
         for (int i = 0; i < cache.size(); i++) {
@@ -148,9 +148,9 @@ final class UserScriptStore {
     synchronized String exportJson() { return serializeCacheLocked(); }
 
     synchronized int importJson(String raw) throws Exception {
-        if (raw == null) throw new IllegalArgumentException("脚本备份为空");
+        if (raw == null) throw new IllegalArgumentException("Script backup is empty");
         new JSONArray(raw);
-        if (!decodeCache(raw)) throw new IllegalArgumentException("脚本备份损坏");
+        if (!decodeCache(raw)) throw new IllegalArgumentException("Script backup is corrupted");
         persist();
         return cache.size();
     }
@@ -218,10 +218,10 @@ final class UserScriptStore {
     }
 
     Script parseUserScript(String source, String sourceUrl) throws IllegalArgumentException {
-        if (source == null || source.length() == 0) throw new IllegalArgumentException("脚本内容为空");
+        if (source == null || source.length() == 0) throw new IllegalArgumentException("Script content is empty");
         int start = source.indexOf("==UserScript==");
         int end = source.indexOf("==/UserScript==");
-        if (start < 0 || end <= start) throw new IllegalArgumentException("不是有效的 UserScript");
+        if (start < 0 || end <= start) throw new IllegalArgumentException("Not a valid UserScript");
 
         Script script = new Script();
         script.sourceUrl = sourceUrl == null ? "" : sourceUrl;
@@ -273,7 +273,7 @@ final class UserScriptStore {
             else if (lowerKey.equals("updateurl")) script.updateUrl = value;
         }
         script.name = localizedName.length() > 0 ? localizedName : (fallbackName.length() > 0 ? fallbackName :
-                (anyLocalizedName.length() > 0 ? anyLocalizedName : "未命名脚本"));
+                (anyLocalizedName.length() > 0 ? anyLocalizedName : "Untitled script"));
         script.description = localizedDescription.length() > 0 ? localizedDescription :
                 (fallbackDescription.length() > 0 ? fallbackDescription : anyLocalizedDescription);
         if (script.matches.size() == 0) script.matches.add("*://*/*");
@@ -513,7 +513,7 @@ final class UserScriptStore {
                 if (object == null) continue;
                 Script script = new Script();
                 script.id = object.optString("id", String.valueOf(i));
-                script.name = object.optString("name", "未命名脚本");
+                script.name = object.optString("name", "Untitled script");
                 script.version = object.optString("version", "");
                 script.namespace = object.optString("namespace", "");
                 script.description = object.optString("description", "");
@@ -650,36 +650,36 @@ final class UserScriptStore {
         String lower = combined.toLowerCase(Locale.US);
         int score = 0;
         ArrayList<String> reasons = new ArrayList<String>();
-        if (script.matches.contains("*://*/*") || script.matches.contains("http*://*/*")) { score += 2; reasons.add("全站运行"); }
-        if (script.requires.size() > 0) { score += Math.min(4, script.requires.size() * 2); reasons.add("外部依赖"); }
-        if (script.resources.size() > 0) { score += Math.min(2, script.resources.size()); reasons.add("外部资源"); }
-        if (script.connects.contains("*")) { score += 2; reasons.add("任意网络域名"); }
+        if (script.matches.contains("*://*/*") || script.matches.contains("http*://*/*")) { score += 2; reasons.add("Runs on all sites"); }
+        if (script.requires.size() > 0) { score += Math.min(4, script.requires.size() * 2); reasons.add("External dependencies"); }
+        if (script.resources.size() > 0) { score += Math.min(2, script.resources.size()); reasons.add("External resources"); }
+        if (script.connects.contains("*")) { score += 2; reasons.add("Any network domain"); }
         for (String grant : script.grants) {
             if (!"none".equalsIgnoreCase(grant)) score += 1;
             if (grant.toLowerCase(Locale.US).contains("xmlhttprequest") || grant.toLowerCase(Locale.US).contains("download")) score += 1;
         }
-        if (lower.contains("unsafewindow")) { score += 2; reasons.add("网页全局访问"); }
-        if (lower.contains("eval(") || lower.contains("new function")) { score += 3; reasons.add("动态代码"); }
-        if (lower.contains("while(true)") || lower.contains("while (true)") || lower.contains("for(;;)")) { score += 5; reasons.add("疑似无限循环"); }
-        if (lower.contains("setinterval(")) { score += 1; reasons.add("高频定时器"); }
-        if (lower.contains("mutationobserver")) { score += 1; reasons.add("持续 DOM 监听"); }
-        if (lower.contains("xmlhttprequest") || lower.contains("fetch(") || lower.contains("websocket")) { score += 2; reasons.add("网络访问"); }
-        if (lower.contains("document.cookie") || lower.contains("localstorage")) { score += 1; reasons.add("网站数据访问"); }
-        if (lower.contains("navigator.clipboard") || lower.contains("execcommand('copy") || lower.contains("execcommand(\"copy")) { score += 1; reasons.add("剪贴板访问"); }
-        if (lower.contains("sendbeacon") || lower.contains("rtcpeerconnection")) { score += 2; reasons.add("后台通信"); }
-        if (script.code != null && script.code.length() > 262144) { score += 2; reasons.add("大型脚本"); }
+        if (lower.contains("unsafewindow")) { score += 2; reasons.add("Page global access"); }
+        if (lower.contains("eval(") || lower.contains("new function")) { score += 3; reasons.add("Dynamic code"); }
+        if (lower.contains("while(true)") || lower.contains("while (true)") || lower.contains("for(;;)")) { score += 5; reasons.add("Possible infinite loop"); }
+        if (lower.contains("setinterval(")) { score += 1; reasons.add("High-frequency timer"); }
+        if (lower.contains("mutationobserver")) { score += 1; reasons.add("Continuous DOM observer"); }
+        if (lower.contains("xmlhttprequest") || lower.contains("fetch(") || lower.contains("websocket")) { score += 2; reasons.add("Network access"); }
+        if (lower.contains("document.cookie") || lower.contains("localstorage")) { score += 1; reasons.add("Site storage access"); }
+        if (lower.contains("navigator.clipboard") || lower.contains("execcommand('copy") || lower.contains("execcommand(\"copy")) { score += 1; reasons.add("Clipboard access"); }
+        if (lower.contains("sendbeacon") || lower.contains("rtcpeerconnection")) { score += 2; reasons.add("Background communication"); }
+        if (script.code != null && script.code.length() > 262144) { score += 2; reasons.add("Large script"); }
         script.riskScore = score;
-        if (score >= 8) script.riskSummary = "高风险 · " + join(reasons);
-        else if (score >= 4) script.riskSummary = "中风险 · " + join(reasons);
-        else if (score > 0) script.riskSummary = "低风险 · " + join(reasons);
-        else script.riskSummary = "低风险 · 未发现明显危险特征";
+        if (score >= 8) script.riskSummary = "High risk · " + join(reasons);
+        else if (score >= 4) script.riskSummary = "Medium risk · " + join(reasons);
+        else if (score > 0) script.riskSummary = "Low risk · " + join(reasons);
+        else script.riskSummary = "Low risk · No obvious dangerous patterns detected";
     }
 
     private static String join(List<String> values) {
-        if (values.size() == 0) return "需人工检查";
+        if (values.size() == 0) return "Manual review needed";
         StringBuilder out = new StringBuilder();
         for (int i = 0; i < values.size() && i < 4; i++) {
-            if (i > 0) out.append("、");
+            if (i > 0) out.append(", ");
             out.append(values.get(i));
         }
         return out.toString();

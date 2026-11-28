@@ -46,7 +46,7 @@ final class OfflinePageStore {
     }
 
     void save(WebView view, String title, String url, final Callback callback) {
-        if (view == null) { if (callback != null) callback.onComplete(null, new IllegalArgumentException("没有活动页面")); return; }
+        if (view == null) { if (callback != null) callback.onComplete(null, new IllegalArgumentException("No active page")); return; }
         final Entry entry = new Entry();
         entry.file = "page-" + System.currentTimeMillis() + '-' + Long.toHexString(System.nanoTime()) + ".mht";
         entry.title = safe(title, 180);
@@ -57,12 +57,12 @@ final class OfflinePageStore {
             @Override public void onReceiveValue(String path) {
                 if (path == null || !target.isFile() || target.length() == 0L) {
                     target.delete();
-                    if (callback != null) callback.onComplete(null, new IllegalStateException("系统 WebView 无法保存此页面"));
+                    if (callback != null) callback.onComplete(null, new IllegalStateException("System WebView could not save this page"));
                     return;
                 }
                 if (target.length() > MAX_BYTES) {
                     target.delete();
-                    if (callback != null) callback.onComplete(null, new IllegalStateException("单个离线页面超过 128 MB"));
+                    if (callback != null) callback.onComplete(null, new IllegalStateException("Single offline page exceeds 128 MB"));
                     return;
                 }
                 entry.size = target.length();
@@ -105,7 +105,7 @@ final class OfflinePageStore {
                 if (value == null) continue;
                 Entry entry = new Entry();
                 entry.file = value.optString("file", "");
-                entry.title = value.optString("title", "离线页面");
+                entry.title = value.optString("title", "Offline page");
                 entry.url = value.optString("url", "");
                 entry.createdAt = value.optLong("createdAt", 0L);
                 File file = new File(root, entry.file);

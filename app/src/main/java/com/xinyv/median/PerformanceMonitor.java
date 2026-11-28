@@ -71,16 +71,16 @@ final class PerformanceMonitor {
         double p50 = percentileMs(sample, 0.50d);
         double p95 = percentileMs(sample, 0.95d);
         double p99 = percentileMs(sample, 0.99d);
-        return "当前档位：" + modeLabel +
-                "\n进程 PSS：约 " + (pssKb / 1024L) + " MB" +
-                "\nJava 堆：" + javaUsedMb + " / " + javaLimitMb + " MB" +
-                "\n统计帧数：" + count +
-                "\n>16.7ms：" + jank + "（" + String.format(Locale.US, "%.1f", percent) + "%）" +
-                "\n>33.4ms：" + severe +
-                "\n>100ms：" + frozen +
-                "\nP50 / P95 / P99：" + String.format(Locale.US, "%.1f / %.1f / %.1f ms", p50, p95, p99) +
-                "\n指标回调丢帧：" + droppedCallbacks.get() +
-                "\n最慢帧：" + String.format(Locale.US, "%.1f", maxNanos.get() / 1_000_000.0) + " ms";
+        return "Current profile: " + modeLabel +
+                "\nProcess PSS: ~" + (pssKb / 1024L) + " MB" +
+                "\nJava heap: " + javaUsedMb + " / " + javaLimitMb + " MB" +
+                "\nSampled frames: " + count +
+                "\n>16.7ms: " + jank + " (" + String.format(Locale.US, "%.1f", percent) + "%)" +
+                "\n>33.4ms: " + severe +
+                "\n>100ms: " + frozen +
+                "\nP50 / P95 / P99: " + String.format(Locale.US, "%.1f / %.1f / %.1f ms", p50, p95, p99) +
+                "\nDropped metric callbacks: " + droppedCallbacks.get() +
+                "\nSlowest frame: " + String.format(Locale.US, "%.1f", maxNanos.get() / 1_000_000.0) + " ms";
     }
 
     private static double percentileMs(long[] sorted, double fraction) {

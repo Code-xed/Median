@@ -163,7 +163,7 @@ final class BookmarkFolderStore {
 
     synchronized String path(String id) {
         Folder current = folders.get(safeId(id));
-        if (current == null) return "全部收藏";
+        if (current == null) return "All Bookmarks";
         ArrayList<String> parts = new ArrayList<String>();
         HashSet<String> seen = new HashSet<String>();
         while (current != null && seen.add(current.id)) {
@@ -171,7 +171,7 @@ final class BookmarkFolderStore {
             current = folders.get(current.parentId);
         }
         Collections.reverse(parts);
-        StringBuilder value = new StringBuilder("全部收藏");
+        StringBuilder value = new StringBuilder("All Bookmarks");
         for (String part : parts) value.append(" / ").append(part);
         return value.toString();
     }
@@ -219,7 +219,7 @@ final class BookmarkFolderStore {
     }
 
     private static State parse(String raw) throws Exception {
-        if (raw == null || raw.length() > 2 * 1024 * 1024) throw new IllegalArgumentException("收藏文件夹数据过大");
+        if (raw == null || raw.length() > 2 * 1024 * 1024) throw new IllegalArgumentException("Bookmark folder data exceeds size limit");
         JSONObject root = new JSONObject(raw.length() == 0 ? "{}" : raw);
         LinkedHashMap<String, Folder> parsedFolders = new LinkedHashMap<String, Folder>();
         JSONArray list = root.optJSONArray("folders");

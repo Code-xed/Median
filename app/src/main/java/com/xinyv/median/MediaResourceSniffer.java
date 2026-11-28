@@ -9,9 +9,19 @@ import java.util.Locale;
 
 /** Bounded, metadata-only media URL index populated from requests and DOM media elements. */
 final class MediaResourceSniffer {
+    static final String KIND_HLS = "hls";
+    static final String KIND_DASH = "dash";
+    static final String KIND_SMOOTH = "smooth";
+    static final String KIND_VIDEO = "video";
+    static final String KIND_AUDIO = "audio";
+    static final String KIND_RANGE = "range";
+    static final String KIND_SEGMENT = "segment";
+    static final String KIND_MANIFEST = "manifest";
+
     static final class Resource implements Cloneable {
         String url;
         String mime;
+        String kindId;
         String kind;
         String pageHost;
         String source;
@@ -64,9 +74,9 @@ final class MediaResourceSniffer {
         if (!isHttpUrl(url)) return;
         String decoded = searchable(url);
         String mime = cleanMime(declaredMime);
-        String kind = kindOf(decoded, mime);
-        if (kind.length() == 0) return;
-        addMedia(url, decoded, mime, kind, pageHost, source, width, height, duration);
+        String kindId = kindIdOf(decoded, mime);
+        if (kindId.length() == 0) return;
+        addMedia(url, decoded, mime, kindId, pageHost, source, width, height, duration);
     }
 
     synchronized void observeOpaque(String url, String declaredMime) {
@@ -83,7 +93,12 @@ final class MediaResourceSniffer {
 
     /** Fast shared filter used by WebView request interception and regression tests. */
     static boolean isCandidate(String url, String declaredMime) {
-        return isHttpUrl(url) && kindOf(searchable(url), cleanMime(declaredMime)).length() > 0;
+        return isHttpUrl(url) && kindIdOf(searchable(url), cleanMime(declaredMime)).length() > 0;
+    }
+
+    static boolean isManifestKind(String kindId) {
+        return KIND_HLS.equals(kindId) || KIND_DASH.equals(kindId) ||
+                KIND_SMOOTH.equals(kindId) || KIND_MANIFEST.equals(kindId);
     }
 
     /** Cheap UI-thread gate for WebView's redundant onLoadResource callback. */
@@ -127,22 +142,23 @@ final class MediaResourceSniffer {
     synchronized int size() { return items.size(); }
     synchronized int opaqueCount() { return opaqueMediaCount; }
 
-    private void addMedia(String url, String normalizedUrl, String mime, String kind, String pageHost,
+    private void addMedia(String url, String normalizedUrl, String mime, String kindId, String pageHost,
                           String source, int width, int height, double duration) {
         String key = normalizeKey(url);
         synchronized (this) {
             Resource existing = items.remove(key);
             Resource item = existing == null ? new Resource() : existing;
             item.url = stripHtmlAmp(url);
-            item.kind = kind;
-            item.mime = normalizedMime(normalizedUrl, mime, kind);
+            item.kindId = kindId;
+            item.kind = displayKind(kindId);
+            item.mime = normalizedMime(normalizedUrl, mime, kindId);
             item.pageHost = value(pageHost);
             item.source = value(source);
             if (width > 0) item.width = width;
             if (height > 0) item.height = height;
             if (duration > 0 && !Double.isInfinite(duration) && !Double.isNaN(duration)) item.duration = duration;
             item.seenAt = System.currentTimeMillis();
-            item.priority = priorityOf(kind);
+            item.priority = priorityOf(kindId);
             items.put(key, item);
             if (item.priority == 1) trimSegments();
             while (items.size() > MAX_ITEMS) removeLowestPriorityOldest();
@@ -175,35 +191,48 @@ final class MediaResourceSniffer {
         if (victim != null) items.remove(victim);
     }
 
-    private static String kindOf(String url, String mime) {
-        if (mime.contains("mpegurl") || hasAny(url, HLS_HINTS) || containsAny(url, HLS_PATHS)) return "HLS 流";
-        if (mime.contains("dash+xml") || hasAny(url, DASH_HINTS) || containsAny(url, DASH_PATHS)) return "DASH 流";
-        if (mime.contains("vnd.ms-sstr") || hasAny(url, SMOOTH_HINTS) || containsAny(url, SMOOTH_PATHS)) return "Smooth 流";
-        if (mime.startsWith("video/") || hasAny(url, VIDEO_HINTS) || containsAny(url, VIDEO_PATHS)) return "视频";
-        if (mime.startsWith("audio/") || hasAny(url, AUDIO_HINTS) || containsAny(url, AUDIO_PATHS)) return "音频";
-        if (mime.contains("x-median-range")) return "范围媒体候选";
-        if (hasAny(url, SEGMENT_HINTS) || containsAny(url, SEGMENT_PATHS)) return "媒体分片";
-        if (hasPathMarker(url, "manifest") || hasPathMarker(url, "playlist")) return "媒体清单";
+    private static String kindIdOf(String url, String mime) {
+        if (mime.contains("mpegurl") || hasAny(url, HLS_HINTS) || containsAny(url, HLS_PATHS)) return KIND_HLS;
+        if (mime.contains("dash+xml") || hasAny(url, DASH_HINTS) || containsAny(url, DASH_PATHS)) return KIND_DASH;
+        if (mime.contains("vnd.ms-sstr") || hasAny(url, SMOOTH_HINTS) || containsAny(url, SMOOTH_PATHS)) return KIND_SMOOTH;
+        if (mime.startsWith("video/") || hasAny(url, VIDEO_HINTS) || containsAny(url, VIDEO_PATHS)) return KIND_VIDEO;
+        if (mime.startsWith("audio/") || hasAny(url, AUDIO_HINTS) || containsAny(url, AUDIO_PATHS)) return KIND_AUDIO;
+        if (mime.contains("x-median-range")) return KIND_RANGE;
+        if (hasAny(url, SEGMENT_HINTS) || containsAny(url, SEGMENT_PATHS)) return KIND_SEGMENT;
+        if (hasPathMarker(url, "manifest") || hasPathMarker(url, "playlist")) return KIND_MANIFEST;
         return "";
     }
 
-    private static String normalizedMime(String url, String mime, String kind) {
+    private static String displayKind(String kindId) {
+        if (KIND_HLS.equals(kindId)) return "HLS stream";
+        if (KIND_DASH.equals(kindId)) return "DASH stream";
+        if (KIND_SMOOTH.equals(kindId)) return "Smooth stream";
+        if (KIND_VIDEO.equals(kindId)) return "Video";
+        if (KIND_AUDIO.equals(kindId)) return "Audio";
+        if (KIND_RANGE.equals(kindId)) return "Range media candidate";
+        if (KIND_SEGMENT.equals(kindId)) return "Media segment";
+        if (KIND_MANIFEST.equals(kindId)) return "Media manifest";
+        return "";
+    }
+
+    private static String normalizedMime(String url, String mime, String kindId) {
         if (mime.startsWith("video/") || mime.startsWith("audio/") || mime.startsWith("application/")) return mime;
-        if ("HLS 流".equals(kind)) return "application/vnd.apple.mpegurl";
-        if ("DASH 流".equals(kind)) return "application/dash+xml";
-        if ("Smooth 流".equals(kind)) return "application/vnd.ms-sstr+xml";
-        if ("媒体清单".equals(kind)) return "application/octet-stream";
-        if ("范围媒体候选".equals(kind)) return "application/octet-stream";
-        if ("媒体分片".equals(kind)) return hasAny(url, ISO_SEGMENT_HINTS) ? "video/iso.segment" : "video/mp2t";
+        if (KIND_HLS.equals(kindId)) return "application/vnd.apple.mpegurl";
+        if (KIND_DASH.equals(kindId)) return "application/dash+xml";
+        if (KIND_SMOOTH.equals(kindId)) return "application/vnd.ms-sstr+xml";
+        if (KIND_MANIFEST.equals(kindId)) return "application/octet-stream";
+        if (KIND_RANGE.equals(kindId)) return "application/octet-stream";
+        if (KIND_SEGMENT.equals(kindId)) return hasAny(url, ISO_SEGMENT_HINTS) ? "video/iso.segment" : "video/mp2t";
         if (hasToken(url, ".mp3")) return "audio/mpeg";
         if (hasToken(url, ".m4a") || hasToken(url, ".aac")) return "audio/mp4";
         if (hasToken(url, ".webm") || hasToken(url, ".weba")) return "video/webm";
-        return "视频".equals(kind) ? "video/*" : "audio/*";
+        return KIND_VIDEO.equals(kindId) ? "video/*" : "audio/*";
     }
 
-    private static int priorityOf(String kind) {
-        if ("HLS 流".equals(kind) || "DASH 流".equals(kind) || "Smooth 流".equals(kind) || "媒体清单".equals(kind)) return 3;
-        if ("媒体分片".equals(kind) || "范围媒体候选".equals(kind)) return 1;
+    private static int priorityOf(String kindId) {
+        if (KIND_HLS.equals(kindId) || KIND_DASH.equals(kindId) ||
+                KIND_SMOOTH.equals(kindId) || KIND_MANIFEST.equals(kindId)) return 3;
+        if (KIND_SEGMENT.equals(kindId) || KIND_RANGE.equals(kindId)) return 1;
         return 2;
     }
 

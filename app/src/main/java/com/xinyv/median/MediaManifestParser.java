@@ -34,13 +34,13 @@ final class MediaManifestParser {
                 mime.contains("dash+xml")) return parseDash(baseUrl, source);
         if (Pattern.compile("<\\s*SmoothStreamingMedia\\b", Pattern.CASE_INSENSITIVE).matcher(source).find() ||
                 mime.contains("vnd.ms-sstr")) return parseSmooth(baseUrl, source);
-        throw new IllegalArgumentException("无法识别媒体清单格式");
+        throw new IllegalArgumentException("Unrecognized media manifest format");
     }
 
     static Playlist parseHls(String baseUrl, String text) {
         if (text != null && text.length() > 0 && text.charAt(0) == '\ufeff') text = text.substring(1);
         if (text == null || !text.trim().startsWith("#EXTM3U"))
-            throw new IllegalArgumentException("不是有效的 HLS 清单");
+            throw new IllegalArgumentException("Not a valid HLS manifest");
         Playlist result = new Playlist();
         HashSet<String> seen = new HashSet<String>();
         String pendingLabel = null;
@@ -71,7 +71,7 @@ final class MediaManifestParser {
 
     static Playlist parseDash(String baseUrl, String text) {
         if (text == null || !Pattern.compile("<\\s*MPD\\b", Pattern.CASE_INSENSITIVE).matcher(text).find())
-            throw new IllegalArgumentException("不是有效的 DASH 清单");
+            throw new IllegalArgumentException("Not a valid DASH manifest");
         Playlist result = new Playlist();
         result.format = "DASH";
         String root = firstMatch(text, "<\\s*MPD\\b([^>]*)>");
@@ -94,7 +94,7 @@ final class MediaManifestParser {
             String codecs = xmlAttribute(attributes, "codecs");
             String id = xmlAttribute(attributes, "id");
             StringBuilder label = new StringBuilder(resolution.length() > 0 ? resolution :
-                    (id.length() > 0 ? "轨道 " + id : "DASH 轨道"));
+                    (id.length() > 0 ? "Track " + id : "DASH track"));
             try {
                 long bits = Long.parseLong(bandwidth);
                 if (bits > 0) label.append(" · ").append(bits / 1000L).append(" kbps");
@@ -109,7 +109,7 @@ final class MediaManifestParser {
 
     static Playlist parseSmooth(String baseUrl, String text) {
         if (text == null || !Pattern.compile("<\\s*SmoothStreamingMedia\\b", Pattern.CASE_INSENSITIVE).matcher(text).find())
-            throw new IllegalArgumentException("不是有效的 Smooth Streaming 清单");
+            throw new IllegalArgumentException("Not a valid Smooth Streaming manifest");
         Playlist result = new Playlist();
         result.format = "Smooth";
         String root = firstMatch(text, "<\\s*SmoothStreamingMedia\\b([^>]*)>");
@@ -123,7 +123,7 @@ final class MediaManifestParser {
         if (value == null || value.length() == 0) return;
         try {
             String resolved = NetworkSecurity.parseHttpUrl(new URL(new URL(base), value).toString()).toString();
-            if (seen.add(resolved)) out.add(new Variant(resolved, label.length() == 0 ? "自适应码流" : label));
+            if (seen.add(resolved)) out.add(new Variant(resolved, label.length() == 0 ? "Adaptive stream" : label));
         } catch (Exception ignored) {}
     }
 
@@ -139,7 +139,7 @@ final class MediaManifestParser {
             if (bits > 0) label.append(label.length() == 0 ? "" : " · ").append(bits / 1000L).append(" kbps");
         } catch (NumberFormatException ignored) {}
         if (codecs.length() > 0) label.append(label.length() == 0 ? "" : " · ").append(codecs);
-        return label.length() == 0 ? "自适应码流" : label.toString();
+        return label.length() == 0 ? "Adaptive stream" : label.toString();
     }
 
     private static String attribute(String line, String key) {
